@@ -1,0 +1,32 @@
+## One-command self-hosting: mongo + server + bot.
+## Copy .env.example to .env in this folder first. See docs/SELF_HOSTING.md.
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+
+  server:
+    build: ../server
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+    ports:
+      - "8400:8400"
+    depends_on:
+      - mongo
+
+  bot:
+    build: ../bot
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+    depends_on:
+      - mongo
+
+volumes:
+  mongo_data:
