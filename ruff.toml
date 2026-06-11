@@ -3,3 +3,7 @@ target-version = "py312"
 
 [lint]
 select = ["E", "F", "W", "I", "UP", "B"]
+
+[lint.per-file-ignores]
+# SlashOption(...) as a parameter default is the nextcord idiom for slash options.
+"bot/biomebeacon_bot/cogs/*" = ["B008"]
