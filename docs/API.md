@@ -31,7 +31,7 @@ Everything the macro needs. `dispatch.webhook_url` is present **only** when
 `relay=false` (direct mode, `per_user_channels` only).
 ```json
 {
-  "user": {"discord_id": 123, "discord_name": "lucas", "private_server_link": "https://..."},
+  "user": {"discord_id": 123, "discord_name": "luh", "private_server_link": "https://..."},
   "dispatch": {"relay": true, "webhook_url": null},
   "biomes": [
     {"name": "GLITCHED", "display": "Glitched", "color": 8388863,

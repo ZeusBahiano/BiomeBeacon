@@ -43,4 +43,14 @@ python -m venv .venv
 .venv\Scripts\python -m pytest macro server bot
 ```
 
+## Credits
+
+- UI design inspired by [Noteab Macro](https://github.com/xVapure/Noteab-Macro).
+  BiomeBeacon is intentionally **detection-only** — for everything else a Sol's RNG
+  macro can do (auto-roll, crafting, item farming and more), use Noteab Macro.
+  They run great side by side.
+- Parts of this codebase were written with AI assistance (Claude).
+- The bundled [Sarpanch](https://fonts.google.com/specimen/Sarpanch) font is used
+  under the SIL Open Font License.
+
 License: [MIT](LICENSE).

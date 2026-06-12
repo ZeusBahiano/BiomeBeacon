@@ -2,6 +2,15 @@
 
 const $ = (sel) => document.querySelector(sel);
 
+const THEMES = [
+  ["void", "Void Purple"],
+  ["solar", "Solar Gold"],
+  ["sky", "Sky Blue"],
+  ["rose", "Rose"],
+  ["teal", "Teal"],
+  ["nebula", "Nebula"],
+];
+
 let biomeMeta = {};   // BIOME -> {display, color, ...} from server config
 let accounts = {};    // roblox uid -> username
 let instances = [];
@@ -18,7 +27,7 @@ const FALLBACK_COLORS = {
 
 const metaFor = (name) => biomeMeta[name] || { color: FALLBACK_COLORS[name] };
 
-const hex = (c) => "#" + ((c ?? 0x9aa3ad) >>> 0).toString(16).padStart(6, "0");
+const hex = (c) => "#" + ((c ?? 0x636370) >>> 0).toString(16).padStart(6, "0");
 
 function fmtSince(epoch) {
   if (!epoch) return "";
@@ -81,7 +90,7 @@ function updateShowcase() {
   const sub = $("#show-sub");
   const active = instances.filter((i) => i.biome);
   if (!active.length) {
-    show.style.setProperty("--show", "#9aa3ad");
+    show.style.setProperty("--show", "#636370");
     show.textContent = "—";
     sub.textContent = "no active instance";
     return;
@@ -98,8 +107,11 @@ function updateShowcase() {
 
 const handlers = {
   status(data) {
-    $("#status-dot").style.color = data.connected ? "#46c97a" : "#e5484d";
+    const badge = $("#status-badge");
+    badge.classList.toggle("on", data.connected);
+    badge.classList.toggle("off", !data.connected);
     $("#status-text").textContent = data.text;
+    badge.title = data.text;
   },
   instances(data) {
     instances = data;
@@ -142,18 +154,22 @@ async function poll() {
 
 // ----------------------------------------------------------------- wiring
 
-function switchTab(name) {
-  document.querySelectorAll(".tab-btn").forEach((b) =>
-    b.classList.toggle("active", b.dataset.tab === name)
+function switchPage(name) {
+  document.querySelectorAll(".nav-item").forEach((b) =>
+    b.classList.toggle("active", b.dataset.page === name)
   );
-  document.querySelectorAll(".tab-page").forEach((p) =>
-    p.classList.toggle("hidden", p.id !== "tab-" + name)
+  document.querySelectorAll(".page").forEach((p) =>
+    p.classList.toggle("hidden", p.id !== "page-" + name)
   );
 }
 
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+}
+
 function wire() {
-  document.querySelectorAll(".tab-btn").forEach((b) =>
-    b.addEventListener("click", () => switchTab(b.dataset.tab))
+  document.querySelectorAll(".nav-item").forEach((b) =>
+    b.addEventListener("click", () => switchPage(b.dataset.page))
   );
   $("#btn-min").addEventListener("click", () => pywebview.api.minimize());
   $("#btn-close").addEventListener("click", () => pywebview.api.close_window());
@@ -162,8 +178,8 @@ function wire() {
     paused = await pywebview.api.set_paused(!paused);
     const btn = $("#btn-pause");
     btn.textContent = paused ? "Resume Detection" : "Pause Detection";
-    btn.classList.toggle("red", !paused);
-    btn.classList.toggle("blue", paused);
+    btn.classList.toggle("btn-start", paused);
+    btn.classList.toggle("btn-stop", !paused);
     feedLine(paused ? "detection paused" : "detection resumed");
   });
 
@@ -175,7 +191,7 @@ function wire() {
   $("#btn-save").addEventListener("click", () => {
     pywebview.api.save_connection($("#set-url").value.trim(), $("#set-key").value.trim());
     feedLine("connection settings saved — testing…");
-    switchTab("status");
+    switchPage("dashboard");
   });
 
   $("#btn-link").addEventListener("click", () => {
@@ -187,15 +203,42 @@ function wire() {
     const dir = await pywebview.api.apply_logdir($("#set-logdir").value.trim());
     feedLine(`watching: ${dir}`);
   });
+
+  $("#set-theme").addEventListener("change", (e) => {
+    applyTheme(e.target.value);
+    pywebview.api.set_theme(e.target.value);
+  });
+
+  $("#set-minimized").addEventListener("change", (e) => {
+    pywebview.api.set_start_minimized(e.target.checked);
+  });
+
+  // external links must not navigate the webview itself
+  document.querySelectorAll("a[data-ext]").forEach((a) =>
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      pywebview.api.open_url(a.href);
+    })
+  );
 }
 
 async function init() {
+  const select = $("#set-theme");
+  select.innerHTML = THEMES
+    .map(([id, name]) => `<option value="${id}">${name}</option>`)
+    .join("");
+
   wire();
   const initial = await pywebview.api.get_initial();
   $("#version").textContent = "v" + initial.version;
   if (initial.server_url) $("#set-url").value = initial.server_url;
   if (initial.api_key) $("#set-key").value = initial.api_key;
   if (initial.log_dir) $("#set-logdir").value = initial.log_dir;
+  $("#set-minimized").checked = !!initial.start_minimized;
+  const theme = initial.theme || "void";
+  select.value = theme;
+  applyTheme(theme);
+
   renderTiles();
   feedLine("BiomeBeacon started");
   setInterval(poll, 400);

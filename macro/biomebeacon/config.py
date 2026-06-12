@@ -32,6 +32,7 @@ class MacroConfig:
     log_dir: str = ""  # empty = default Roblox location ("dev override" otherwise)
     start_minimized: bool = False
     poll_interval: float = 2.0
+    theme: str = "void"
 
     @property
     def effective_log_dir(self) -> Path:

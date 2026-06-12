@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="void">
 <head>
   <meta charset="utf-8">
   <title>BiomeBeacon</title>
@@ -7,84 +7,131 @@
 </head>
 <body>
 
-  <header id="chrome">
-    <div class="conn-pill panel-mini">
-      <span id="status-dot">●</span>
-      <span id="status-text">Starting…</span>
-    </div>
-    <h1 class="game-title pywebview-drag-region">Biome<span>Beacon</span></h1>
+  <div id="chrome" class="pywebview-drag-region">
+    <span class="chrome-title">BIOMEBEACON</span>
     <div class="win-controls">
       <button id="btn-min" title="Minimize">–</button>
       <button id="btn-close" title="Close">✕</button>
     </div>
-  </header>
+  </div>
 
-  <main>
+  <div id="shell">
     <aside class="sidebar">
-      <section class="panel showcase">
-        <div id="show-biome">—</div>
-        <div id="show-sub">no active instance</div>
-      </section>
-
-      <section class="panel info">
-        <h3>[ Information ]</h3>
-        <div class="info-line">Server: <span id="info-server">—</span></div>
-        <div class="info-line">Flow: <span id="info-mode">—</span></div>
-        <div class="info-line">Instances: <span id="info-instances">0</span></div>
-        <div class="info-line">Last event: <span id="info-last">—</span></div>
-      </section>
-
-      <div class="btn-stack">
-        <button id="btn-pause" class="game-btn red">Pause Detection</button>
-        <button id="btn-test" class="game-btn blue">Test Connection</button>
+      <div class="brand">
+        <div class="brand-name">BIOME<span>BEACON</span></div>
+        <div class="brand-sub" id="version">v0.0.0</div>
       </div>
 
-      <div class="footer-gold">
-        [ BiomeBeacon ]
-        <div id="version">v0.0.0</div>
+      <nav class="nav">
+        <div class="nav-label">General</div>
+        <button class="nav-item active" data-page="dashboard">Dashboard</button>
+        <button class="nav-item" data-page="settings">Settings</button>
+      </nav>
+
+      <div class="side-status">
+        <div class="nav-label">Status</div>
+        <div id="status-badge" class="status-badge off">
+          <span class="dot"></span><span id="status-text">Starting…</span>
+        </div>
+        <button id="btn-pause" class="btn btn-stop">Pause Detection</button>
+        <button id="btn-test" class="btn btn-secondary">Test Connection</button>
+      </div>
+
+      <div class="side-footer">
+        log-based detection<br>no injection · no input
       </div>
     </aside>
 
-    <section class="panel content">
-      <div class="tabs">
-        <button class="tab-btn active" data-tab="status">Status [ <span id="tab-count">0</span> ]</button>
-        <button class="tab-btn" data-tab="settings">Settings</button>
-      </div>
+    <main id="main">
 
-      <div id="tab-status" class="tab-page">
-        <div id="tiles" class="tiles"></div>
-        <h3>[ Activity ]</h3>
-        <div id="feed" class="feed"></div>
-      </div>
-
-      <div id="tab-settings" class="tab-page hidden">
-        <h3>[ Connection ]</h3>
-        <input id="set-url" class="game-input" spellcheck="false"
-               placeholder="Server URL  (https://biomes.yourcommunity.com)">
-        <input id="set-key" class="game-input" type="password" spellcheck="false"
-               placeholder="API Key  (sent to you by /key create)">
-        <div class="row">
-          <button id="btn-save" class="game-btn blue">Save &amp; Test</button>
+      <section id="page-dashboard" class="page">
+        <div class="grid-2">
+          <div class="card showcase-card">
+            <div class="card-title">Current Biome</div>
+            <div id="show-biome">—</div>
+            <div id="show-sub" class="muted">no active instance</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Information</div>
+            <div class="info-line"><span>Server</span><b id="info-server">—</b></div>
+            <div class="info-line"><span>Flow</span><b id="info-mode">—</b></div>
+            <div class="info-line"><span>Instances</span><b id="info-instances">0</b></div>
+            <div class="info-line"><span>Last event</span><b id="info-last">—</b></div>
+          </div>
         </div>
 
-        <h3>[ Private Server ]</h3>
-        <input id="set-link" class="game-input" spellcheck="false"
-               placeholder="https://www.roblox.com/share?code=…&type=Server">
-        <div class="row">
-          <button id="btn-link" class="game-btn gold">Update Link</button>
+        <div class="card">
+          <div class="card-title">Instances <span id="tab-count" class="count-chip">0</span></div>
+          <div id="tiles" class="tiles"></div>
         </div>
-        <p class="hint">This is the link your community receives when a biome starts on your server.</p>
 
-        <h3>[ Advanced ]</h3>
-        <input id="set-logdir" class="game-input" spellcheck="false"
-               placeholder="Log directory override  (empty = default Roblox logs)">
-        <div class="row">
-          <button id="btn-logdir" class="game-btn gray">Apply</button>
+        <div class="card grow">
+          <div class="card-title">Activity Log</div>
+          <div id="feed" class="feed"></div>
         </div>
-        <p class="hint">BiomeBeacon only reads Roblox log files — it never touches the game.</p>
-      </div>
-    </section>
-  </main>
+      </section>
+
+      <section id="page-settings" class="page hidden">
+        <div class="card">
+          <div class="card-title">Connection</div>
+          <label for="set-url">Server URL</label>
+          <input id="set-url" class="input" spellcheck="false"
+                 placeholder="https://biomes.yourcommunity.com">
+          <label for="set-key">API Key</label>
+          <input id="set-key" class="input" type="password" spellcheck="false"
+                 placeholder="bb_… (sent to you by /key create)">
+          <div class="actions">
+            <button id="btn-save" class="btn btn-accent">Save &amp; Test</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Private Server</div>
+          <label for="set-link">Roblox private server link</label>
+          <input id="set-link" class="input" spellcheck="false"
+                 placeholder="https://www.roblox.com/share?code=…&type=Server">
+          <div class="actions">
+            <button id="btn-link" class="btn btn-accent">Update Link</button>
+          </div>
+          <p class="muted small">Sent to your community whenever a biome starts on your server.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Appearance</div>
+          <label for="set-theme">Theme</label>
+          <select id="set-theme" class="input"></select>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Advanced</div>
+          <label for="set-logdir">Log directory override</label>
+          <input id="set-logdir" class="input" spellcheck="false"
+                 placeholder="empty = default Roblox logs">
+          <div class="actions">
+            <button id="btn-logdir" class="btn btn-secondary">Apply</button>
+          </div>
+          <label class="check">
+            <input type="checkbox" id="set-minimized"> Start minimized
+          </label>
+          <p class="muted small">BiomeBeacon only reads Roblox log files — it never touches the game.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">About &amp; Credits</div>
+          <p class="muted small">
+            UI design inspired by
+            <a href="https://github.com/xVapure/Noteab-Macro" data-ext class="ext-link">Noteab Macro</a>.
+            BiomeBeacon only does biome detection — for everything else a Sol's RNG
+            macro can do (auto-roll, crafting, item farming and more), use
+            <a href="https://github.com/xVapure/Noteab-Macro" data-ext class="ext-link">Noteab Macro</a>.
+            They work great side by side.
+          </p>
+          <p class="muted small">Parts of this codebase were written with AI assistance.</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
 
   <script src="app.js"></script>
 </body>

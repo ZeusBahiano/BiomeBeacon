@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import queue
 import sys
+import webbrowser
 from pathlib import Path
 
 import webview
@@ -42,6 +43,8 @@ class Api:
             "server_url": self.config.server_url,
             "api_key": self.config.api_key,
             "log_dir": self.config.log_dir,
+            "theme": self.config.theme,
+            "start_minimized": self.config.start_minimized,
         }
 
     def poll(self) -> list:
@@ -78,6 +81,23 @@ class Api:
         self._paused = bool(paused)
         self.watcher.set_paused(self._paused)
         return self._paused
+
+    def set_theme(self, theme: str) -> bool:
+        self.config.theme = str(theme)
+        self.config.save()
+        return True
+
+    def set_start_minimized(self, enabled: bool) -> bool:
+        self.config.start_minimized = bool(enabled)
+        self.config.save()
+        return True
+
+    def open_url(self, url: str) -> bool:
+        # only credit/help links from our own HTML reach this; still, be strict
+        if not url.startswith("https://"):
+            return False
+        webbrowser.open(url)
+        return True
 
     def minimize(self) -> None:
         if self.window:
