@@ -8,72 +8,102 @@
 </head>
 <body>
   <div id="login" class="login hidden">
-    <div class="login-card">
-      <h1>Biome<span>Beacon</span></h1>
-      <p>Paste an admin token to continue.</p>
-      <input id="login-token" type="password" placeholder="bba_…" autocomplete="off">
-      <button id="login-btn">Sign in</button>
+    <div class="login-card card">
+      <div class="brand-name">BIOME<span>BEACON</span></div>
+      <div class="brand-sub">admin dashboard</div>
+      <p class="hint">Paste an admin token to continue.</p>
+      <input id="login-token" class="input" type="password" placeholder="bba_…" autocomplete="off">
+      <button id="login-btn" class="btn btn-accent">Sign in</button>
       <p id="login-error" class="error"></p>
     </div>
   </div>
 
   <div id="app" class="app hidden">
     <aside class="sidebar">
-      <h1>Biome<span>Beacon</span></h1>
-      <nav>
-        <button class="tab active" data-tab="overview">Overview</button>
-        <button class="tab" data-tab="users">Users</button>
-        <button class="tab" data-tab="biomes">Biomes</button>
-        <button class="tab" data-tab="settings">Settings</button>
-        <button class="tab" data-tab="events">Events</button>
+      <div class="brand">
+        <div class="brand-name">BIOME<span>BEACON</span></div>
+        <div class="brand-sub">admin dashboard</div>
+      </div>
+
+      <nav class="nav">
+        <div class="nav-label">Manage</div>
+        <button class="tab nav-item active" data-tab="overview">Overview</button>
+        <button class="tab nav-item" data-tab="users">Users</button>
+        <button class="tab nav-item" data-tab="biomes">Biomes</button>
+        <button class="tab nav-item" data-tab="settings">Settings</button>
+        <button class="tab nav-item" data-tab="events">Events</button>
       </nav>
-      <button id="logout" class="ghost">Sign out</button>
+
+      <div class="side-status">
+        <button id="logout" class="btn btn-secondary">Sign out</button>
+      </div>
+
+      <div class="side-footer">
+        UI inspired by <a href="https://github.com/xVapure/Noteab-Macro" class="ext-link"
+          target="_blank" rel="noopener">Noteab Macro</a><br>
+        built partly with AI assistance
+      </div>
     </aside>
 
     <main>
-      <section id="tab-overview" class="panel">
-        <h2>Overview</h2>
-        <div id="stats" class="cards"></div>
-        <h3>Broken webhooks</h3>
-        <ul id="broken" class="plain-list"></ul>
-      </section>
-
-      <section id="tab-users" class="panel hidden">
-        <h2>Users</h2>
-        <p class="hint">Keys are created with <code>/key create</code> in Discord — that flow
-          also provisions channels/webhooks. Here you can deactivate, regenerate or delete.</p>
-        <table id="users-table"></table>
-      </section>
-
-      <section id="tab-biomes" class="panel hidden">
-        <h2>Biomes</h2>
-        <p class="hint">Names must match the game's hoverText exactly (uppercase).
-          New biomes reach every macro automatically via config.</p>
-        <div class="row">
-          <input id="new-biome-name" placeholder="NEW BIOME NAME">
-          <button id="add-biome">Add</button>
+      <section id="tab-overview" class="panel page">
+        <div class="card">
+          <div class="card-title">Overview</div>
+          <div id="stats" class="cards"></div>
         </div>
-        <table id="biomes-table"></table>
+        <div class="card">
+          <div class="card-title">Broken Webhooks</div>
+          <ul id="broken" class="plain-list"></ul>
+        </div>
       </section>
 
-      <section id="tab-settings" class="panel hidden">
-        <h2>Settings</h2>
-        <form id="settings-form"></form>
-        <div class="row">
-          <input id="test-target" placeholder="single | biome:GLITCHED | user:123">
-          <button id="test-webhook" type="button">Send test webhook</button>
+      <section id="tab-users" class="panel page hidden">
+        <div class="card">
+          <div class="card-title">Users</div>
+          <p class="hint">Keys are created with <code>/key create</code> in Discord — that flow
+            also provisions channels/webhooks. Here you can deactivate, regenerate or delete.</p>
+          <table id="users-table"></table>
         </div>
-        <p id="settings-msg" class="hint"></p>
       </section>
 
-      <section id="tab-events" class="panel hidden">
-        <h2>Events</h2>
-        <div class="row">
-          <input id="ev-user" placeholder="discord id">
-          <input id="ev-biome" placeholder="biome">
-          <button id="ev-refresh">Refresh</button>
+      <section id="tab-biomes" class="panel page hidden">
+        <div class="card">
+          <div class="card-title">Biomes</div>
+          <p class="hint">Names must match the game's hoverText exactly (uppercase).
+            New biomes reach every macro automatically via config.</p>
+          <div class="row">
+            <input id="new-biome-name" class="input" placeholder="NEW BIOME NAME">
+            <button id="add-biome" class="btn btn-accent">Add</button>
+          </div>
+          <table id="biomes-table"></table>
         </div>
-        <table id="events-table"></table>
+      </section>
+
+      <section id="tab-settings" class="panel page hidden">
+        <div class="card">
+          <div class="card-title">Settings</div>
+          <form id="settings-form"></form>
+        </div>
+        <div class="card">
+          <div class="card-title">Test Webhook</div>
+          <div class="row">
+            <input id="test-target" class="input" placeholder="single | biome:GLITCHED | user:123">
+            <button id="test-webhook" type="button" class="btn btn-secondary">Send test webhook</button>
+          </div>
+          <p id="settings-msg" class="hint"></p>
+        </div>
+      </section>
+
+      <section id="tab-events" class="panel page hidden">
+        <div class="card">
+          <div class="card-title">Events</div>
+          <div class="row">
+            <input id="ev-user" class="input" placeholder="discord id">
+            <input id="ev-biome" class="input" placeholder="biome">
+            <button id="ev-refresh" class="btn btn-secondary">Refresh</button>
+          </div>
+          <table id="events-table"></table>
+        </div>
       </section>
     </main>
   </div>
