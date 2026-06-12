@@ -72,10 +72,10 @@ class BiomePut(BaseModel):
     color: int = Field(default=0x9B9B9B, ge=0, le=0xFFFFFF)
     image_url: str | None = None
     notify: bool = True
+    ping_everyone: bool = False
     ping_role_id: int | None = None
     channel_id: int | None = None
     webhook_url: str | None = None
-    rarity: Literal["common", "rare", "legendary"] = "rare"
 
 
 class TestWebhookIn(BaseModel):

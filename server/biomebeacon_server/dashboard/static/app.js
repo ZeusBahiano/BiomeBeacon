@@ -146,7 +146,6 @@ async function loadUsers() {
 
 async function loadBiomes() {
   const { biomes } = await api("/biomes");
-  const rarities = ["common", "rare", "legendary"];
   const rows = biomes.map((b) => `
     <tr data-name="${esc(b.name)}">
       <td><strong>${esc(b.name)}</strong></td>
@@ -154,16 +153,15 @@ async function loadBiomes() {
       <td><input class="f-color" type="color" value="#${Number(b.color).toString(16).padStart(6, "0")}"></td>
       <td><input class="f-image" value="${esc(b.image_url || "")}" placeholder="thumbnail url"></td>
       <td><input class="f-notify" type="checkbox" ${b.notify ? "checked" : ""}></td>
+      <td><input class="f-everyone" type="checkbox" ${b.ping_everyone ? "checked" : ""}></td>
       <td><input class="f-ping" value="${esc(b.ping_role_id || "")}" placeholder="role id"></td>
       <td><input class="f-webhook" value="${esc(b.webhook_url || "")}" placeholder="webhook (per-biome mode)">
           ${b.webhook_broken ? '<span class="badge off">broken</span>' : ""}</td>
-      <td><select class="f-rarity">${rarities.map((r) =>
-        `<option ${r === b.rarity ? "selected" : ""}>${r}</option>`).join("")}</select></td>
       <td><button class="small" data-act="save">Save</button>
           <button class="small danger" data-act="del">✕</button></td>
     </tr>`).join("");
   $("#biomes-table").innerHTML =
-    "<tr><th>Name</th><th>Display</th><th>Color</th><th>Image</th><th>Notify</th><th>Ping role</th><th>Webhook</th><th>Rarity</th><th></th></tr>" + rows;
+    "<tr><th>Name</th><th>Display</th><th>Color</th><th>Image</th><th>Notify</th><th>@everyone</th><th>Ping role</th><th>Webhook</th><th></th></tr>" + rows;
 
   $("#biomes-table").querySelectorAll("button").forEach((btn) =>
     btn.addEventListener("click", async () => {
@@ -179,9 +177,9 @@ async function loadBiomes() {
             color: parseInt(tr.querySelector(".f-color").value.slice(1), 16),
             image_url: tr.querySelector(".f-image").value || null,
             notify: tr.querySelector(".f-notify").checked,
+            ping_everyone: tr.querySelector(".f-everyone").checked,
             ping_role_id: parseInt(tr.querySelector(".f-ping").value) || null,
             webhook_url: tr.querySelector(".f-webhook").value || null,
-            rarity: tr.querySelector(".f-rarity").value,
           };
           await api(`/biomes/${encodeURIComponent(name)}`, { method: "PUT", body: JSON.stringify(body) });
         }

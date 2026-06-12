@@ -61,13 +61,20 @@ def test_resolve_webhook_modes(dispatcher):
 def test_payload_started_pings_and_links(dispatcher):
     payload = dispatcher.build_payload(_event(), _user(), _biome(ping_role_id=42))
     assert payload["content"] == "<@&42>"
-    assert payload["allowed_mentions"] == {"parse": ["roles"]}
+    assert payload["allowed_mentions"] == {"parse": ["roles", "everyone"]}
     embed = payload["embeds"][0]
     assert embed["title"] == "Glitched started!"
     assert embed["color"] == 0x39FF14
     assert "<@111>" in embed["description"]
     assert "Join now" in embed["description"]
     assert payload["username"] == "Test Community"
+
+
+def test_payload_everyone_beats_role_ping(dispatcher):
+    biome = _biome(ping_everyone=True, ping_role_id=42)
+    assert dispatcher.build_payload(_event(), _user(), biome)["content"] == "@everyone"
+    biome = _biome(ping_everyone=False, ping_role_id=None)
+    assert dispatcher.build_payload(_event(), _user(), biome)["content"] == ""
 
 
 def test_payload_started_without_link(dispatcher):

@@ -34,8 +34,9 @@ Everything the macro needs. `dispatch.webhook_url` is present **only** when
   "user": {"discord_id": 123, "discord_name": "luh", "private_server_link": "https://..."},
   "dispatch": {"relay": true, "webhook_url": null},
   "biomes": [
-    {"name": "GLITCHED", "display": "Glitched", "color": 8388863,
-     "image_url": null, "notify": true, "ping_role_id": 456}
+    {"name": "GLITCHED", "display": "Glitched", "color": 12582656,
+     "image_url": "https://maxstellar.github.io/biome_thumb/GLITCHED.png",
+     "notify": true, "ping_everyone": true, "ping_role_id": null}
   ],
   "place_ids": [15532962292],
   "heartbeat_interval": 300,

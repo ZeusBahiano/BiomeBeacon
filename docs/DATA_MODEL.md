@@ -54,16 +54,18 @@ receives the list via `GET /me/config`, so no macro update is needed.
 | `color` | int | embed color (e.g. `0x8A2BE2`) |
 | `image_url` | str \| null | embed thumbnail |
 | `notify` | bool | false = audit only, no webhook (default for `NORMAL`) |
+| `ping_everyone` | bool | mention `@everyone` on `started` (takes precedence over `ping_role_id`) |
 | `ping_role_id` | int \| null | role mentioned on `started` |
 | `channel_id` | int \| null | `per_biome_channels` mode |
 | `webhook_url` | str \| null | `per_biome_channels` mode |
 | `webhook_broken` | bool | set by dispatcher on 404/410 |
-| `rarity` | str | `common` \| `rare` \| `legendary` (display only) |
 
 Seed list: `NORMAL` (notify=false), `WINDY`, `RAINY`, `SNOWY`, `SAND STORM`, `HELL`,
 `STARFALL`, `CORRUPTION`, `AURORA`, `EGGLAND`, `NULL`, `GLITCHED`, `DREAMSPACE`,
 `HEAVEN`, `CYBERSPACE`, `SINGULARITY`. Colors and `image_url` thumbnails follow the
-Noteab macro's `biomes_data.json` so embeds look consistent across community tools.
+Coteab macro's `biomes_data.json` so embeds look consistent across community tools.
+`GLITCHED`, `DREAMSPACE` and `CYBERSPACE` seed with `ping_everyone=true`; admins can
+turn it off per biome in the dashboard.
 
 ## Collection: `users`
 

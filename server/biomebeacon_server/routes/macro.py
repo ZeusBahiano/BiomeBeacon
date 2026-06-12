@@ -48,6 +48,7 @@ async def me_config(request: web.Request) -> web.Response:
             "color": b.get("color", 0x9B9B9B),
             "image_url": b.get("image_url"),
             "notify": b.get("notify", True),
+            "ping_everyone": b.get("ping_everyone", False),
             "ping_role_id": b.get("ping_role_id"),
         }
         async for b in db.biomes.find({})

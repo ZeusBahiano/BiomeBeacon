@@ -39,13 +39,17 @@ def build_event_payload(event: dict, user: dict, biome: dict, server_name: str) 
         embed["thumbnail"] = {"url": biome["image_url"]}
 
     content = ""
-    if started and biome.get("ping_role_id"):
-        content = f"<@&{biome['ping_role_id']}>"
+    if started:
+        if biome.get("ping_everyone"):
+            content = "@everyone"
+        elif biome.get("ping_role_id"):
+            content = f"<@&{biome['ping_role_id']}>"
     return {
         "username": server_name,
         "content": content,
         "embeds": [embed],
-        "allowed_mentions": {"parse": ["roles"]},
+        # parse lists what MAY ping; only what appears in content actually does
+        "allowed_mentions": {"parse": ["roles", "everyone"]},
     }
 
 

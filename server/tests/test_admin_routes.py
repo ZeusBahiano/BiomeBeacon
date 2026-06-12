@@ -105,7 +105,7 @@ async def test_settings_patch_rejects_unknown_mode(client, admin_headers):
 async def test_biome_put_and_delete(client, db, admin_headers):
     resp = await client.put(
         "/api/v1/admin/biomes/pumpkin moon",
-        json={"display": "Pumpkin Moon", "color": 0xFF8800, "rarity": "legendary"},
+        json={"display": "Pumpkin Moon", "color": 0xFF8800, "ping_everyone": True},
         headers=admin_headers,
     )
     assert resp.status == 200
