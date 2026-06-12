@@ -7,6 +7,17 @@ let accounts = {};    // roblox uid -> username
 let instances = [];
 let paused = false;
 
+// Cosmetic fallback while not connected to a server (mirrors the server's
+// biome seed in docs/DATA_MODEL.md; the real colors arrive via /me/config).
+const FALLBACK_COLORS = {
+  "NORMAL": 0x9b9b9b, "WINDY": 0x8fd3e8, "RAINY": 0x4f7df2, "SNOWY": 0xcfe8ff,
+  "SAND STORM": 0xd8b35a, "HELL": 0xb3251e, "STARFALL": 0x6f6fd8,
+  "CORRUPTION": 0x7d3bd1, "NULL": 0x222222, "GLITCHED": 0x39ff14,
+  "DREAMSPACE": 0xff7ad9,
+};
+
+const metaFor = (name) => biomeMeta[name] || { color: FALLBACK_COLORS[name] };
+
 const hex = (c) => "#" + ((c ?? 0x9aa3ad) >>> 0).toString(16).padStart(6, "0");
 
 function fmtSince(epoch) {
@@ -51,7 +62,7 @@ function renderTiles() {
   tiles.innerHTML = instances
     .map((inst) => {
       const biome = inst.biome || "…";
-      const meta = biomeMeta[biome] || {};
+      const meta = metaFor(biome);
       const account =
         accounts[inst.roblox_user_id] ||
         (inst.roblox_user_id ? `#${inst.roblox_user_id}` : "unknown account");
@@ -77,7 +88,7 @@ function updateShowcase() {
   }
   // highlight the most interesting biome: anything that's not NORMAL wins
   const pick = active.find((i) => i.biome !== "NORMAL") || active[0];
-  const meta = biomeMeta[pick.biome] || {};
+  const meta = metaFor(pick.biome);
   show.style.setProperty("--show", hex(meta.color));
   show.textContent = pick.biome;
   sub.textContent = `${fmtSince(pick.biome_since)} · ${active.length} instance(s)`;
