@@ -61,7 +61,9 @@ receives the list via `GET /me/config`, so no macro update is needed.
 | `rarity` | str | `common` \| `rare` \| `legendary` (display only) |
 
 Seed list: `NORMAL` (notify=false), `WINDY`, `RAINY`, `SNOWY`, `SAND STORM`, `HELL`,
-`STARFALL`, `CORRUPTION`, `NULL`, `GLITCHED`, `DREAMSPACE`.
+`STARFALL`, `CORRUPTION`, `AURORA`, `EGGLAND`, `NULL`, `GLITCHED`, `DREAMSPACE`,
+`HEAVEN`, `CYBERSPACE`, `SINGULARITY`. Colors and `image_url` thumbnails follow the
+Noteab macro's `biomes_data.json` so embeds look consistent across community tools.
 
 ## Collection: `users`
 

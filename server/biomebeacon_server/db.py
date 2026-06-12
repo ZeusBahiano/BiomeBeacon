@@ -37,12 +37,15 @@ DEFAULT_SETTINGS: dict[str, Any] = {
 }
 
 
-def _biome(name: str, display: str, color: int, rarity: str, notify: bool = True) -> dict:
+def _biome(
+    name: str, display: str, color: int, rarity: str, image: str | None = None,
+    notify: bool = True,
+) -> dict:
     return {
         "name": name,
         "display": display,
         "color": color,
-        "image_url": None,
+        "image_url": image,
         "notify": notify,
         "ping_role_id": None,
         "channel_id": None,
@@ -53,18 +56,31 @@ def _biome(name: str, display: str, color: int, rarity: str, notify: bool = True
 
 
 # Names must match Sol's RNG `largeImage.hoverText` exactly (uppercase).
+# Colors and thumbnails follow the Noteab macro's biomes_data.json so embeds
+# look consistent across community tools (their NORMAL entry mistakenly reuses
+# the GLITCHED color/thumb; fixed here).
+_THUMB = "https://maxstellar.github.io/biome_thumb"
+_NOTEAB = "https://raw.githubusercontent.com/xVapure/Noteab-Macro/refs/heads/main/images"
+
 BIOME_SEED = [
-    _biome("NORMAL", "Normal", 0x9B9B9B, "common", notify=False),
-    _biome("WINDY", "Windy", 0x8FD3E8, "common"),
-    _biome("RAINY", "Rainy", 0x4F7DF2, "common"),
-    _biome("SNOWY", "Snowy", 0xCFE8FF, "common"),
-    _biome("SAND STORM", "Sand Storm", 0xD8B35A, "rare"),
-    _biome("HELL", "Hell", 0xB3251E, "rare"),
-    _biome("STARFALL", "Starfall", 0x6F6FD8, "rare"),
-    _biome("CORRUPTION", "Corruption", 0x7D3BD1, "rare"),
-    _biome("NULL", "Null", 0x222222, "legendary"),
-    _biome("GLITCHED", "Glitched", 0x39FF14, "legendary"),
-    _biome("DREAMSPACE", "Dreamspace", 0xFF7AD9, "legendary"),
+    _biome("NORMAL", "Normal", 0x9B9B9B, "common", f"{_THUMB}/NORMAL.png", notify=False),
+    _biome("WINDY", "Windy", 0x9AE5FF, "common", f"{_THUMB}/WINDY.png"),
+    _biome("RAINY", "Rainy", 0x027CBD, "common", f"{_THUMB}/RAINY.png"),
+    _biome("SNOWY", "Snowy", 0xDCEFF9, "common", f"{_THUMB}/SNOWY.png"),
+    _biome("SAND STORM", "Sand Storm", 0x8F7057, "rare", f"{_THUMB}/SAND%20STORM.png"),
+    _biome("HELL", "Hell", 0xFF4719, "rare", f"{_THUMB}/HELL.png"),
+    _biome("STARFALL", "Starfall", 0x011AB7, "rare", f"{_THUMB}/STARFALL.png"),
+    _biome("CORRUPTION", "Corruption", 0x6D32A8, "rare", f"{_THUMB}/CORRUPTION.png"),
+    _biome("AURORA", "Aurora", 0x0047AB, "rare",
+           "https://raw.githubusercontent.com/vexthecoder/OysterDetector/main/assets/aurora.png"),
+    _biome("EGGLAND", "Eggland", 0xD4FC8D, "rare", f"{_NOTEAB}/EGGLAND.png"),
+    _biome("NULL", "Null", 0x838383, "legendary", f"{_THUMB}/NULL.png"),
+    _biome("GLITCHED", "Glitched", 0xBFFF00, "legendary", f"{_THUMB}/GLITCHED.png"),
+    _biome("DREAMSPACE", "Dreamspace", 0xEA9DDA, "legendary",
+           f"{_NOTEAB}/Screenshot_2026-01-03_021107.png"),
+    _biome("HEAVEN", "Heaven", 0xFFE8A0, "legendary", f"{_THUMB}/HEAVEN.png"),
+    _biome("CYBERSPACE", "Cyberspace", 0x0A1A3D, "legendary", f"{_NOTEAB}/CYBERSPACE.png"),
+    _biome("SINGULARITY", "Singularity", 0xCF4023, "legendary", f"{_NOTEAB}/SINGULARITY.png"),
 ]
 
 

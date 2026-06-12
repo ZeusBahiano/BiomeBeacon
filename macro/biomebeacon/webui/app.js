@@ -19,10 +19,11 @@ let paused = false;
 // Cosmetic fallback while not connected to a server (mirrors the server's
 // biome seed in docs/DATA_MODEL.md; the real colors arrive via /me/config).
 const FALLBACK_COLORS = {
-  "NORMAL": 0x9b9b9b, "WINDY": 0x8fd3e8, "RAINY": 0x4f7df2, "SNOWY": 0xcfe8ff,
-  "SAND STORM": 0xd8b35a, "HELL": 0xb3251e, "STARFALL": 0x6f6fd8,
-  "CORRUPTION": 0x7d3bd1, "NULL": 0x222222, "GLITCHED": 0x39ff14,
-  "DREAMSPACE": 0xff7ad9,
+  "NORMAL": 0x9b9b9b, "WINDY": 0x9ae5ff, "RAINY": 0x027cbd, "SNOWY": 0xdceff9,
+  "SAND STORM": 0x8f7057, "HELL": 0xff4719, "STARFALL": 0x011ab7,
+  "CORRUPTION": 0x6d32a8, "AURORA": 0x0047ab, "EGGLAND": 0xd4fc8d,
+  "NULL": 0x838383, "GLITCHED": 0xbfff00, "DREAMSPACE": 0xea9dda,
+  "HEAVEN": 0xffe8a0, "CYBERSPACE": 0x0a1a3d, "SINGULARITY": 0xcf4023,
 };
 
 const metaFor = (name) => biomeMeta[name] || { color: FALLBACK_COLORS[name] };

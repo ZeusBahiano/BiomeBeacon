@@ -152,6 +152,7 @@ async function loadBiomes() {
       <td><strong>${esc(b.name)}</strong></td>
       <td><input class="f-display" value="${esc(b.display)}"></td>
       <td><input class="f-color" type="color" value="#${Number(b.color).toString(16).padStart(6, "0")}"></td>
+      <td><input class="f-image" value="${esc(b.image_url || "")}" placeholder="thumbnail url"></td>
       <td><input class="f-notify" type="checkbox" ${b.notify ? "checked" : ""}></td>
       <td><input class="f-ping" value="${esc(b.ping_role_id || "")}" placeholder="role id"></td>
       <td><input class="f-webhook" value="${esc(b.webhook_url || "")}" placeholder="webhook (per-biome mode)">
@@ -162,7 +163,7 @@ async function loadBiomes() {
           <button class="small danger" data-act="del">✕</button></td>
     </tr>`).join("");
   $("#biomes-table").innerHTML =
-    "<tr><th>Name</th><th>Display</th><th>Color</th><th>Notify</th><th>Ping role</th><th>Webhook</th><th>Rarity</th><th></th></tr>" + rows;
+    "<tr><th>Name</th><th>Display</th><th>Color</th><th>Image</th><th>Notify</th><th>Ping role</th><th>Webhook</th><th>Rarity</th><th></th></tr>" + rows;
 
   $("#biomes-table").querySelectorAll("button").forEach((btn) =>
     btn.addEventListener("click", async () => {
@@ -176,6 +177,7 @@ async function loadBiomes() {
           const body = {
             display: tr.querySelector(".f-display").value,
             color: parseInt(tr.querySelector(".f-color").value.slice(1), 16),
+            image_url: tr.querySelector(".f-image").value || null,
             notify: tr.querySelector(".f-notify").checked,
             ping_role_id: parseInt(tr.querySelector(".f-ping").value) || null,
             webhook_url: tr.querySelector(".f-webhook").value || null,
