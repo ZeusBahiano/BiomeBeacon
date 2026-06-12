@@ -7,15 +7,14 @@
 
 import os
 
-from PyInstaller.utils.hooks import collect_data_files
-
 MACRO_DIR = os.path.abspath(os.path.join(SPECPATH, ".."))  # noqa: F821 (SPECPATH is injected)
 
 a = Analysis(  # noqa: F821
     [os.path.join(MACRO_DIR, "run_biomebeacon.py")],
     pathex=[MACRO_DIR],
     binaries=[],
-    datas=collect_data_files("customtkinter"),
+    # HTML/CSS/JS interface, served to the WebView2 window from the bundle
+    datas=[(os.path.join(MACRO_DIR, "biomebeacon", "webui"), "biomebeacon/webui")],
     hiddenimports=[],
     hookspath=[],
     runtime_hooks=[],

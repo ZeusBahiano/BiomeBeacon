@@ -7,8 +7,7 @@ from .config import MacroConfig
 from .detection.engine import DetectionEngine
 from .detection.watcher import LogWatcher
 from .net.client import NetWorker
-from .ui.main_window import MainWindow
-from .ui.theme import setup_appearance
+from .ui.web import run_ui
 
 
 def main() -> None:
@@ -37,13 +36,8 @@ def main() -> None:
 
     watcher.start()
     net.start()
-
-    setup_appearance()
-    window = MainWindow(config, watcher, net, ui_queue)
-    if config.start_minimized:
-        window.iconify()
     try:
-        window.mainloop()
+        run_ui(config, watcher, net, ui_queue)  # blocks until the window closes
     finally:
         watcher.stop()
         net.stop()

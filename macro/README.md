@@ -4,6 +4,11 @@ Windows app that detects Sol's RNG biome changes by reading the **Roblox client
 logs** (no game injection, no input automation — log files only) and alerts your
 community's Discord through their BiomeBeacon server.
 
+The interface is HTML/CSS styled after the game's own menus (dark bordered
+panels, outlined text, biome tiles glowing in their color), hosted in a native
+frameless window through **pywebview** (WebView2 — preinstalled on Windows 11;
+Windows 10 may need the [WebView2 runtime](https://developer.microsoft.com/microsoft-edge/webview2/)).
+
 ## For users
 
 1. Get your **Server URL** and **API key** from your community (an admin runs

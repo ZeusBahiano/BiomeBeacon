@@ -23,7 +23,7 @@ database — see [docs/DATA_MODEL.md](docs/DATA_MODEL.md)).
 
 | Component | What it is | Who runs it |
 |---|---|---|
-| [`macro/`](macro/) | Open-source Windows app (customtkinter). Tails Roblox logs, detects biome changes, sends events. Distributed as a PyInstaller `.exe`. | Each user |
+| [`macro/`](macro/) | Open-source Windows app (HTML UI in a native WebView2 window via pywebview, styled after the game's menus). Tails Roblox logs, detects biome changes, sends events. Distributed as a PyInstaller `.exe`. | Each user |
 | [`server/`](server/) | aiohttp REST API + admin dashboard + webhook dispatcher (MongoDB). | The community |
 | [`bot/`](bot/) | nextcord Discord bot: creates keys, auto-provisions channels/webhooks, purges inactive users. | The community |
 

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>BiomeBeacon</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header id="chrome">
+    <div class="conn-pill panel-mini">
+      <span id="status-dot">●</span>
+      <span id="status-text">Starting…</span>
+    </div>
+    <h1 class="game-title pywebview-drag-region">Biome<span>Beacon</span></h1>
+    <div class="win-controls">
+      <button id="btn-min" title="Minimize">–</button>
+      <button id="btn-close" title="Close">✕</button>
+    </div>
+  </header>
+
+  <main>
+    <aside class="sidebar">
+      <section class="panel showcase">
+        <div id="show-biome">—</div>
+        <div id="show-sub">no active instance</div>
+      </section>
+
+      <section class="panel info">
+        <h3>[ Information ]</h3>
+        <div class="info-line">Server: <span id="info-server">—</span></div>
+        <div class="info-line">Flow: <span id="info-mode">—</span></div>
+        <div class="info-line">Instances: <span id="info-instances">0</span></div>
+        <div class="info-line">Last event: <span id="info-last">—</span></div>
+      </section>
+
+      <div class="btn-stack">
+        <button id="btn-pause" class="game-btn red">Pause Detection</button>
+        <button id="btn-test" class="game-btn blue">Test Connection</button>
+      </div>
+
+      <div class="footer-gold">
+        [ BiomeBeacon ]
+        <div id="version">v0.0.0</div>
+      </div>
+    </aside>
+
+    <section class="panel content">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="status">Status [ <span id="tab-count">0</span> ]</button>
+        <button class="tab-btn" data-tab="settings">Settings</button>
+      </div>
+
+      <div id="tab-status" class="tab-page">
+        <div id="tiles" class="tiles"></div>
+        <h3>[ Activity ]</h3>
+        <div id="feed" class="feed"></div>
+      </div>
+
+      <div id="tab-settings" class="tab-page hidden">
+        <h3>[ Connection ]</h3>
+        <input id="set-url" class="game-input" spellcheck="false"
+               placeholder="Server URL  (https://biomes.yourcommunity.com)">
+        <input id="set-key" class="game-input" type="password" spellcheck="false"
+               placeholder="API Key  (sent to you by /key create)">
+        <div class="row">
+          <button id="btn-save" class="game-btn blue">Save &amp; Test</button>
+        </div>
+
+        <h3>[ Private Server ]</h3>
+        <input id="set-link" class="game-input" spellcheck="false"
+               placeholder="https://www.roblox.com/share?code=…&type=Server">
+        <div class="row">
+          <button id="btn-link" class="game-btn gold">Update Link</button>
+        </div>
+        <p class="hint">This is the link your community receives when a biome starts on your server.</p>
+
+        <h3>[ Advanced ]</h3>
+        <input id="set-logdir" class="game-input" spellcheck="false"
+               placeholder="Log directory override  (empty = default Roblox logs)">
+        <div class="row">
+          <button id="btn-logdir" class="game-btn gray">Apply</button>
+        </div>
+        <p class="hint">BiomeBeacon only reads Roblox log files — it never touches the game.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
