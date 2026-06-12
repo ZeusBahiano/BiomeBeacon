@@ -1,4 +1,4 @@
-"""/key — hunter key lifecycle — and /myserver for self-service link updates."""
+"""/key — user key lifecycle — and /myserver for self-service link updates."""
 
 from __future__ import annotations
 
@@ -50,15 +50,15 @@ class KeysCog(commands.Cog):
 
     # -------------------------------------------------------------------- /key
 
-    @nextcord.slash_command(name="key", description="Manage hunter keys")
+    @nextcord.slash_command(name="key", description="Manage user keys")
     async def key_group(self, interaction: nextcord.Interaction):
         pass
 
-    @key_group.subcommand(name="create", description="Create a key (and channel) for a hunter")
+    @key_group.subcommand(name="create", description="Create a key (and channel) for a user")
     async def key_create(
         self,
         interaction: nextcord.Interaction,
-        member: nextcord.Member = SlashOption(description="The hunter"),
+        member: nextcord.Member = SlashOption(description="The user"),
         private_server: str = SlashOption(
             description="Their Roblox private server link", required=False
         ),
@@ -96,7 +96,7 @@ class KeysCog(commands.Cog):
                 except nextcord.Forbidden:
                     await interaction.followup.send(
                         "I need **Manage Channels** and **Manage Webhooks** to create "
-                        "the hunter's channel."
+                        "the user's channel."
                     )
                     return
                 notes.append(f"Channel created: <#{channel_id}>")
@@ -141,11 +141,11 @@ class KeysCog(commands.Cog):
             f"Key created for {member.mention}.\n" + "\n".join(notes)
         )
 
-    @key_group.subcommand(name="revoke", description="Revoke a hunter's access")
+    @key_group.subcommand(name="revoke", description="Revoke a user's access")
     async def key_revoke(
         self,
         interaction: nextcord.Interaction,
-        member: nextcord.Member = SlashOption(description="The hunter"),
+        member: nextcord.Member = SlashOption(description="The user"),
         delete_channel: bool = SlashOption(
             description="Also delete their channel (default: yes)", required=False
         ),
@@ -173,7 +173,7 @@ class KeysCog(commands.Cog):
     async def key_regenerate(
         self,
         interaction: nextcord.Interaction,
-        member: nextcord.Member = SlashOption(description="The hunter"),
+        member: nextcord.Member = SlashOption(description="The user"),
     ):
         settings = await self._gate_manager(interaction)
         if settings is None:
@@ -198,11 +198,11 @@ class KeysCog(commands.Cog):
                 f"⚠️ {member.mention} has DMs closed — pass this on (shown once): ||`{key}`||"
             )
 
-    @key_group.subcommand(name="info", description="Inspect a hunter's status")
+    @key_group.subcommand(name="info", description="Inspect a user's status")
     async def key_info(
         self,
         interaction: nextcord.Interaction,
-        member: nextcord.Member = SlashOption(description="The hunter"),
+        member: nextcord.Member = SlashOption(description="The user"),
     ):
         settings = await self._gate_manager(interaction)
         if settings is None:

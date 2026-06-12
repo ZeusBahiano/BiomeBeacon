@@ -140,7 +140,7 @@ class MainWindow(ctk.CTk):
             body, text="Update link", command=self._update_link, **BUTTON
         ).pack(anchor="w", padx=8, pady=(6, 0))
         ctk.CTkLabel(
-            body, text="This is the link hunters receive when a biome starts on your server.",
+            body, text="This is the link users receive when a biome starts on your server.",
             text_color=COLORS["muted"],
         ).pack(anchor="w", padx=8)
 

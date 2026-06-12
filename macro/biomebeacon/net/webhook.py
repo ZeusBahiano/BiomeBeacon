@@ -19,7 +19,7 @@ ENDED_COLOR = 0x4F545C
 def build_event_payload(event: dict, user: dict, biome: dict, server_name: str) -> dict:
     started = event["type"] == "started"
     display = biome.get("display") or event["biome"].title()
-    lines = [f"**Hunter:** <@{user['discord_id']}>"]
+    lines = [f"**User:** <@{user['discord_id']}>"]
     if started:
         link = user.get("private_server_link")
         lines.append(

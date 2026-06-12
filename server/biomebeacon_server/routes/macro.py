@@ -37,7 +37,7 @@ async def me_config(request: web.Request) -> web.Response:
     settings = await get_settings(db)
 
     # Direct-webhook mode is only honored with per-user channels; anything else
-    # would hand every hunter the shared webhooks, which must stay server-side.
+    # would hand every user the shared webhooks, which must stay server-side.
     relay = settings["relay"] or settings["dispatch_mode"] != "per_user_channels"
     webhook_url = None if relay else user.get("webhook_url")
 

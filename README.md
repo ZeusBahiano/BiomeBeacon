@@ -1,7 +1,7 @@
 # BiomeBeacon
 
 Biome detection and alerting ecosystem for **Sol's RNG** (Roblox) biome-hunting
-communities. When a rare biome (Glitched, Dreamspace, …) starts in a hunter's private
+communities. When a rare biome (Glitched, Dreamspace, …) starts in a user's private
 server, everyone in the community's Discord gets pinged with the link to join.
 
 ## How it works
@@ -23,9 +23,9 @@ database — see [docs/DATA_MODEL.md](docs/DATA_MODEL.md)).
 
 | Component | What it is | Who runs it |
 |---|---|---|
-| [`macro/`](macro/) | Open-source Windows app (customtkinter). Tails Roblox logs, detects biome changes, sends events. Distributed as a PyInstaller `.exe`. | Each hunter |
+| [`macro/`](macro/) | Open-source Windows app (customtkinter). Tails Roblox logs, detects biome changes, sends events. Distributed as a PyInstaller `.exe`. | Each user |
 | [`server/`](server/) | aiohttp REST API + admin dashboard + webhook dispatcher (MongoDB). | The community |
-| [`bot/`](bot/) | nextcord Discord bot: creates keys, auto-provisions channels/webhooks, purges inactive hunters. | The community |
+| [`bot/`](bot/) | nextcord Discord bot: creates keys, auto-provisions channels/webhooks, purges inactive users. | The community |
 
 ## Documentation
 
@@ -43,4 +43,4 @@ python -m venv .venv
 .venv\Scripts\python -m pytest macro server bot
 ```
 
-License: MIT (to be added).
+License: [MIT](LICENSE).

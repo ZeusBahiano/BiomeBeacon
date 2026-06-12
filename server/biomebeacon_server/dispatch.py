@@ -130,7 +130,7 @@ class Dispatcher:
     ) -> dict:
         started = event["type"] == "started"
         display = biome.get("display") or biome["name"].title()
-        lines = [f"**Hunter:** <@{user['discord_id']}>"]
+        lines = [f"**User:** <@{user['discord_id']}>"]
         if started:
             link = user.get("private_server_link")
             lines.append(

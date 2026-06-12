@@ -5,7 +5,7 @@ Responsibilities:
   server is the audit log even in direct mode);
 - in direct mode, additionally post the Discord webhook itself;
 - heartbeat every `heartbeat_interval` (keeps `last_seen` fresh so the
-  inactivity purge knows the hunter is alive) and re-fetch config when stale;
+  inactivity purge knows the user is alive) and re-fetch config when stale;
 - resolve Roblox usernames for the UI;
 - keep an offline buffer so a server blip never loses a GLITCHED alert.
 

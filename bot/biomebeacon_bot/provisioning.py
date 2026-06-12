@@ -22,7 +22,7 @@ def channel_name_for(member: nextcord.Member) -> str:
 async def create_user_channel(
     guild: nextcord.Guild, member: nextcord.Member, category_id: int | None
 ) -> tuple[int, str]:
-    """Creates the hunter's private channel + webhook. Returns (channel_id, webhook_url)."""
+    """Creates the user's private channel + webhook. Returns (channel_id, webhook_url)."""
     category = guild.get_channel(category_id) if category_id else None
     if category is not None and not isinstance(category, nextcord.CategoryChannel):
         category = None
@@ -44,7 +44,7 @@ async def create_user_channel(
 
 
 async def delete_user_channel(guild: nextcord.Guild, channel_id: int | None) -> bool:
-    """Deletes the hunter's channel (webhooks die with it). Returns True if deleted."""
+    """Deletes the user's channel (webhooks die with it). Returns True if deleted."""
     if not channel_id:
         return False
     channel = guild.get_channel(channel_id)

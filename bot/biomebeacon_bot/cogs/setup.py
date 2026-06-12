@@ -131,7 +131,7 @@ class SetupCog(commands.Cog):
         await interaction.response.send_message("Roles updated.", ephemeral=True)
 
     @setup_group.subcommand(
-        name="inactivity", description="Auto-remove hunters whose macro went quiet"
+        name="inactivity", description="Auto-remove users whose macro went quiet"
     )
     async def setup_inactivity(
         self,
