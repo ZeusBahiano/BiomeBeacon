@@ -18,6 +18,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "relay": True,
     "category_id": None,
     "single_channel_webhook": None,
+    "single_channel_webhooks": [],  # extra webhooks for the same channel (round-robin)
     "single_channel_webhook_broken": False,
     "admin_role_id": None,
     "key_manager_role_id": None,
@@ -51,8 +52,12 @@ async def get_settings(db: AsyncIOMotorDatabase) -> dict:
 
 async def update_settings(db: AsyncIOMotorDatabase, updates: dict) -> None:
     """Settings changes also bump updated_at so macros re-fetch their config."""
+    set_doc = {**updates, "updated_at": utcnow()}
+    # Mongo rejects upserts where $set and $setOnInsert share a path (code 40),
+    # so only seed the defaults that this update does not already touch.
+    on_insert = {k: v for k, v in DEFAULT_SETTINGS.items() if k not in set_doc}
     await db.settings.update_one(
         {"_id": SETTINGS_ID},
-        {"$setOnInsert": DEFAULT_SETTINGS, "$set": {**updates, "updated_at": utcnow()}},
+        {"$setOnInsert": on_insert, "$set": set_doc},
         upsert=True,
     )

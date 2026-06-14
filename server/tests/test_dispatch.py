@@ -101,7 +101,29 @@ async def test_enqueue_requires_configured_webhook(dispatcher, db):
     )
     queued = await dispatcher.enqueue_event(_event(), _user(), _biome())
     assert queued is True
-    assert dispatcher.queue.qsize() == 1
+    assert dispatcher._queue.qsize() == 1
+
+
+def test_resolve_webhook_single_channel_round_robins(dispatcher):
+    settings = {
+        "dispatch_mode": "single_channel",
+        "single_channel_webhook": "hook-a",
+        "single_channel_webhooks": ["hook-b", "hook-c"],
+    }
+    picks = [dispatcher._resolve_webhook(settings, _user(), _biome()) for _ in range(4)]
+    assert picks == ["hook-a", "hook-b", "hook-c", "hook-a"]  # cycles all three
+
+
+async def test_enqueue_prioritizes_everyone_over_common(dispatcher, db):
+    await db.settings.update_one(
+        {"_id": "settings"}, {"$set": {"single_channel_webhook": WEBHOOK}}
+    )
+    # Queue two common events, then one @everyone — the rare one must come out first.
+    await dispatcher.enqueue_event(_event(), _user(), _biome(), )
+    await dispatcher.enqueue_event(_event(), _user(), _biome())
+    await dispatcher.enqueue_event(_event(), _user(), _biome(ping_everyone=True))
+    first = dispatcher._queue.get_nowait()
+    assert first[2] is True  # urgent flag — jumped ahead of the two common ones
 
 
 async def test_ended_duration_lookup(dispatcher, db):

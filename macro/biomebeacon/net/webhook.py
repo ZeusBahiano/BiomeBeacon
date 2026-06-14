@@ -65,7 +65,9 @@ async def post_webhook(session: aiohttp.ClientSession, url: str, payload: dict) 
                     continue
                 log.error("webhook returned HTTP %s", resp.status)
                 return False
-        except aiohttp.ClientError as exc:
+        # aiohttp's total timeout raises asyncio.TimeoutError (== builtin
+        # TimeoutError), which is not an aiohttp.ClientError.
+        except (aiohttp.ClientError, TimeoutError) as exc:
             log.warning("webhook post failed: %s", exc)
             return False
     return False

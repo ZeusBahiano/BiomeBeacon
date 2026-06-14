@@ -25,6 +25,11 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "relay": True,
     "category_id": None,
     "single_channel_webhook": None,
+    # Extra webhooks pointing at the SAME single channel. Discord rate-limits per
+    # webhook, so N webhooks ≈ N× throughput — the way to scale single-channel
+    # mode past ~30 msg/min for big (1000+ user) communities. The dispatcher
+    # round-robins across [single_channel_webhook, *single_channel_webhooks].
+    "single_channel_webhooks": [],
     "single_channel_webhook_broken": False,
     "admin_role_id": None,
     "key_manager_role_id": None,
@@ -56,10 +61,12 @@ def _biome(
 
 
 # Names must match Sol's RNG `largeImage.hoverText` exactly (uppercase).
-# Colors and thumbnails follow the Coteab macro's biomes_data.json so embeds
-# look consistent across community tools (their NORMAL entry mistakenly reuses
-# the GLITCHED color/thumb; fixed here). Top-tier biomes ping @everyone by
-# default; admins can turn that off or set a role per biome instead.
+# Colors and thumbnails derived (with modifications) from Coteab Macro's
+# biomes_data.json — Copyright 2025 Noteab, Apache License 2.0, see
+# THIRD_PARTY_NOTICES.md — so embeds look consistent across community tools
+# (their NORMAL entry mistakenly reuses the GLITCHED color/thumb; fixed here).
+# Top-tier biomes ping @everyone by default; admins can turn that off or set
+# a role per biome instead.
 _THUMB = "https://maxstellar.github.io/biome_thumb"
 _COTEAB = "https://raw.githubusercontent.com/xVapure/Noteab-Macro/refs/heads/main/images"
 

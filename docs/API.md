@@ -54,8 +54,10 @@ Batch of detected transitions (max 20). Unknown biome names → `422`.
 ]}
 ```
 Response: `{"accepted": 1, "dispatched": 1}` — `dispatched` counts webhook deliveries
-queued (relay mode; biomes with `notify=false` are audited but not dispatched).
-Side effects: audit insert, `users.last_seen`/`last_event_at`/`roblox_user_ids` update.
+queued (relay mode; biomes with `notify=false` are not dispatched). Rare biomes
+(`ping_everyone=true`) jump ahead of common ones in the dispatch queue.
+Side effects: only `ping_everyone` events are persisted to the `events` log (keeps
+writes low at scale); `users.last_seen`/`last_event_at`/`roblox_user_ids` always update.
 
 ### `POST /api/v1/heartbeat`
 ```json

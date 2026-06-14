@@ -154,6 +154,10 @@ body {
   gap: 12px;
   min-height: 100%;
 }
+/* Cap the dashboard at the viewport so the Activity Log card shrinks and its
+   feed scrolls internally, instead of stretching the whole page. (Settings
+   keeps min-height only — its content may legitimately exceed the window.) */
+#page-dashboard { height: 100%; }
 .grid-2 { display: grid; grid-template-columns: 1.25fr 1fr; gap: 12px; }
 .grow { flex: 1; display: flex; flex-direction: column; min-height: 160px; }
 
@@ -453,7 +457,41 @@ select.input { appearance: none; cursor: pointer; }
   color: var(--text-2);
   cursor: pointer;
 }
-.check input { accent-color: var(--accent); }
+/* angular checkbox: sharp square, thin border, accent fill — same language
+   as the cards/buttons instead of the OS-native rounded widget. Kept identical
+   to the server dashboard (input[type=checkbox], both margin and padding reset)
+   so the two UIs render the same; the global selector also covers any checkbox
+   added later, not just the one inside .check. */
+input[type="checkbox"] {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  display: inline-grid;
+  place-content: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+}
+input[type="checkbox"]::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent-glow);
+  transform: scale(0);
+  transition: transform .12s;
+}
+input[type="checkbox"]:hover { border-color: var(--border-hover); }
+input[type="checkbox"]:checked { border-color: var(--accent); }
+input[type="checkbox"]:checked::before { transform: scale(1); }
+input[type="checkbox"]:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
 
 .ext-link { color: var(--accent-text); text-decoration: none; border-bottom: 1px dotted var(--accent-dim); }
 .ext-link:hover { color: var(--accent); }

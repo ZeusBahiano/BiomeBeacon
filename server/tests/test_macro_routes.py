@@ -62,9 +62,11 @@ async def test_post_events_dispatches_and_audits(client, db, user, user_headers,
     assert 1420234927 in updated["roblox_user_ids"]
 
 
-async def test_post_events_normal_is_audited_not_dispatched(
+async def test_post_events_common_biome_not_dispatched_or_stored(
     client, db, user, user_headers, dispatcher
 ):
+    # NORMAL is notify=False and not @everyone: neither dispatched nor persisted.
+    # Only rare (@everyone) biomes are stored, to keep writes low at scale.
     payload = {
         "events": [{"biome": "NORMAL", "type": "started", "client_ts": "2026-06-11T12:00:00Z"}]
     }
@@ -72,7 +74,21 @@ async def test_post_events_normal_is_audited_not_dispatched(
     data = await resp.json()
     assert data == {"accepted": 1, "dispatched": 0}
     assert dispatcher.enqueued == []
-    assert await db.events.count_documents({}) == 1
+    assert await db.events.count_documents({}) == 0
+
+
+async def test_post_events_midtier_dispatched_but_not_stored(
+    client, db, user, user_headers, dispatcher
+):
+    # RAINY notifies (so it's dispatched) but is not @everyone, so it must NOT be
+    # persisted — only rare biomes land in the events collection.
+    payload = {
+        "events": [{"biome": "RAINY", "type": "started", "client_ts": "2026-06-11T12:00:00Z"}]
+    }
+    resp = await client.post("/api/v1/events", json=payload, headers=user_headers)
+    assert (await resp.json()) == {"accepted": 1, "dispatched": 1}
+    assert len(dispatcher.enqueued) == 1
+    assert await db.events.count_documents({}) == 0
 
 
 async def test_post_events_unknown_biome(client, user, user_headers):

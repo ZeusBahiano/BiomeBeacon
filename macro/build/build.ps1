@@ -27,9 +27,15 @@ if ($LASTEXITCODE -ne 0) {
     (Join-Path $buildDir "biomebeacon.spec")
 
 if ($LASTEXITCODE -eq 0) {
-    $exe = Join-Path $buildDir "dist\BiomeBeacon.exe"
+    $dist = Join-Path $buildDir "dist"
+    # Stage license files next to the exe — distribute them together with it
+    # (Apache-2.0 compliance for the Noteab-Macro material, see THIRD_PARTY_NOTICES.md).
+    Copy-Item (Join-Path $repoRoot "LICENSE") $dist
+    Copy-Item (Join-Path $repoRoot "THIRD_PARTY_NOTICES.md") $dist
+    Copy-Item (Join-Path $repoRoot "LICENSES") $dist -Recurse -Force
+    $exe = Join-Path $dist "BiomeBeacon.exe"
     $size = [math]::Round((Get-Item $exe).Length / 1MB, 1)
-    Write-Host "`nOK: $exe ($size MB)"
+    Write-Host "`nOK: $exe ($size MB) — ship it together with the license files in dist\"
 } else {
     exit $LASTEXITCODE
 }

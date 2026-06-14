@@ -29,7 +29,7 @@ class FakeDispatcher:
     async def stop(self):
         pass
 
-    async def enqueue_event(self, event, user, biome):
+    async def enqueue_event(self, event, user, biome, settings=None):
         self.enqueued.append((event, user, biome))
         return True
 

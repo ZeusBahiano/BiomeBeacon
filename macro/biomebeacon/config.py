@@ -31,7 +31,7 @@ class MacroConfig:
     api_key: str = ""
     log_dir: str = ""  # empty = default Roblox location ("dev override" otherwise)
     start_minimized: bool = False
-    poll_interval: float = 2.0
+    poll_interval: float = 1.0  # lower = faster rare-biome detection, small CPU cost
     theme: str = "void"
 
     @property

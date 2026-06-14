@@ -1,13 +1,24 @@
-"""Webhook dispatcher: a single async worker drains a queue of Discord deliveries.
+"""Webhook dispatcher: a pool of async workers drain a priority queue.
 
-Biome transitions are rare (a handful per hour per user), so sequential delivery
-with polite 429 handling is plenty. A webhook that returns 401/404/410 is flagged
-as broken on the owning document so it shows up in the dashboard.
+Two things matter at community scale (1000+ users in one channel):
+
+- **Rare biomes must be delivered first.** @everyone events jump ahead of the
+  flood of common transitions via a priority queue, so a Glitched alert never
+  waits behind hundreds of Windy/Rainy messages.
+- **No head-of-line blocking.** A worker *pool* delivers in parallel, so one
+  slow/rate-limited webhook can't stall everyone else. Discord rate-limits per
+  webhook, so single-channel mode can round-robin across several webhooks
+  (`single_channel_webhook` + `single_channel_webhooks`) for N× throughput.
+
+A webhook that returns 401/404/410 is flagged as broken on the owning document
+so it shows up in the dashboard. The common-event queue is soft-capped so a
+backlog can't grow without bound; urgent (@everyone) events are never dropped.
 """
 
 from __future__ import annotations
 
 import asyncio
+import itertools
 import logging
 
 import aiohttp
@@ -19,48 +30,86 @@ log = logging.getLogger(__name__)
 ENDED_COLOR = 0x4F545C
 TEST_COLOR = 0x7C3AED
 
+WORKER_COUNT = 4
+NORMAL_BACKLOG_CAP = 5000  # max queued non-urgent deliveries before dropping
+PRIORITY_URGENT = 0
+PRIORITY_NORMAL = 1
+
+# Queue item: (priority, seq, urgent, url, payload, meta). `seq` is a unique
+# tiebreaker so PriorityQueue never has to compare the dicts that follow it.
+QueueItem = tuple[int, int, bool, str, dict, dict]
+
 
 class Dispatcher:
     def __init__(self, db, server_name: str):
         self.db = db
         self.server_name = server_name
-        self.queue: asyncio.Queue[tuple[str, dict, dict]] = asyncio.Queue()
+        self._queue: asyncio.PriorityQueue[QueueItem] = asyncio.PriorityQueue()
+        self._seq = itertools.count()
+        self._normal_backlog = 0
+        self._rr = itertools.count()  # round-robin index for single-channel webhooks
         self._session: aiohttp.ClientSession | None = None
-        self._task: asyncio.Task | None = None
+        self._workers: list[asyncio.Task] = []
 
     async def start(self) -> None:
         self._session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=15))
-        self._task = asyncio.create_task(self._worker())
+        self._workers = [
+            asyncio.create_task(self._worker()) for _ in range(WORKER_COUNT)
+        ]
 
     async def stop(self) -> None:
-        if self._task:
-            self._task.cancel()
+        for task in self._workers:
+            task.cancel()
+        for task in self._workers:
             try:
-                await self._task
+                await task
             except asyncio.CancelledError:
                 pass
+        self._workers = []
         if self._session:
             await self._session.close()
 
+    def _put(self, url: str, payload: dict, meta: dict, urgent: bool) -> None:
+        """Enqueue a delivery. Urgent (@everyone) is always accepted and sorts
+        first; common deliveries are soft-capped so a backlog stays bounded."""
+        if not urgent:
+            if self._normal_backlog >= NORMAL_BACKLOG_CAP:
+                log.error("normal dispatch backlog full — dropping %s", meta)
+                return
+            self._normal_backlog += 1
+        priority = PRIORITY_URGENT if urgent else PRIORITY_NORMAL
+        self._queue.put_nowait((priority, next(self._seq), urgent, url, payload, meta))
+
     # -- enqueueing ---------------------------------------------------------
 
-    async def enqueue_event(self, event: dict, user: dict, biome: dict) -> bool:
+    async def enqueue_event(
+        self, event: dict, user: dict, biome: dict, settings: dict | None = None
+    ) -> bool:
         """Queues a webhook delivery for a biome event. Returns False when the
-        active dispatch mode has no webhook configured for this event."""
-        settings = await get_settings(self.db)
+        active dispatch mode has no webhook configured for this event.
+
+        `settings` is passed in by the events route (already fetched once per
+        request) to avoid a redundant DB read per event under load; it falls
+        back to a fetch so the method stays usable standalone."""
+        if settings is None:
+            settings = await get_settings(self.db)
         url = self._resolve_webhook(settings, user, biome)
         if not url:
             return False
+        urgent = bool(biome.get("ping_everyone"))
+        # Duration needs the matching `started`, which is only persisted for the
+        # rare (@everyone) biomes — don't waste a query on the rest.
         duration = None
-        if event["type"] == "ended":
+        if event["type"] == "ended" and urgent:
             duration = await self._find_duration(event)
         payload = self.build_payload(event, user, biome, duration)
         meta = {
             "mode": settings["dispatch_mode"],
             "user_id": user.get("discord_id"),
             "biome": biome["name"],
+            "urgent": urgent,
         }
-        await self.queue.put((url, payload, meta))
+        self._put(url, payload, meta, urgent)
         return True
 
     async def send_test(self, target: str) -> bool:
@@ -69,7 +118,8 @@ class Dispatcher:
         url = None
         meta = {"mode": "test", "target": target}
         if target == "single":
-            url = settings.get("single_channel_webhook")
+            hooks = self._single_channel_hooks(settings)
+            url = hooks[0] if hooks else None  # test the first configured webhook
             meta["mode"] = "single_channel"
         elif target.startswith("biome:"):
             biome = await self.db.biomes.find_one({"name": target[6:].strip().upper()})
@@ -97,13 +147,22 @@ class Dispatcher:
                 }
             ],
         }
-        await self.queue.put((url, payload, meta))
+        self._put(url, payload, meta, urgent=True)  # admin-triggered: send promptly
         return True
+
+    def _single_channel_hooks(self, settings: dict) -> list[str]:
+        """All webhooks for the shared channel: the primary plus any extras."""
+        extras = settings.get("single_channel_webhooks", [])
+        hooks = [settings.get("single_channel_webhook"), *extras]
+        return [h for h in hooks if h]
 
     def _resolve_webhook(self, settings: dict, user: dict, biome: dict) -> str | None:
         mode = settings["dispatch_mode"]
         if mode == "single_channel":
-            return settings.get("single_channel_webhook")
+            hooks = self._single_channel_hooks(settings)
+            if not hooks:
+                return None
+            return hooks[next(self._rr) % len(hooks)]  # round-robin across webhooks
         if mode == "per_biome_channels":
             return biome.get("webhook_url")
         if mode == "per_user_channels":
@@ -171,32 +230,40 @@ class Dispatcher:
 
     async def _worker(self) -> None:
         while True:
-            url, payload, meta = await self.queue.get()
+            _priority, _seq, urgent, url, payload, meta = await self._queue.get()
+            if not urgent:
+                self._normal_backlog -= 1
             try:
                 await self._deliver(url, payload, meta)
             except Exception:
                 log.exception("webhook delivery failed (%s)", meta)
             finally:
-                self.queue.task_done()
+                self._queue.task_done()
 
     async def _deliver(self, url: str, payload: dict, meta: dict) -> None:
         assert self._session is not None
         for _attempt in range(3):
-            async with self._session.post(url, json=payload) as resp:
-                if resp.status in (200, 204):
+            try:
+                async with self._session.post(url, json=payload) as resp:
+                    if resp.status in (200, 204):
+                        return
+                    if resp.status == 429:
+                        data = await resp.json(content_type=None)
+                        retry = float((data or {}).get("retry_after", 1.0))
+                        await asyncio.sleep(min(retry, 10.0))
+                        continue
+                    if resp.status in (401, 404, 410):
+                        log.error("webhook gone (%s): HTTP %s", meta, resp.status)
+                        await self._mark_broken(meta)
+                        return
+                    body = await resp.text()
+                    log.error("webhook error %s (%s): %s", resp.status, meta, body[:300])
                     return
-                if resp.status == 429:
-                    data = await resp.json(content_type=None)
-                    retry = float((data or {}).get("retry_after", 1.0))
-                    await asyncio.sleep(min(retry, 10.0))
-                    continue
-                if resp.status in (401, 404, 410):
-                    log.error("webhook gone (%s): HTTP %s", meta, resp.status)
-                    await self._mark_broken(meta)
-                    return
-                body = await resp.text()
-                log.error("webhook error %s (%s): %s", resp.status, meta, body[:300])
-                return
+            # total timeout raises asyncio.TimeoutError (== builtin TimeoutError,
+            # not a ClientError); treat any transport error as a retryable attempt.
+            except (aiohttp.ClientError, TimeoutError) as exc:
+                log.warning("webhook attempt failed (%s): %s", meta, exc)
+                await asyncio.sleep(1.0)
         log.error("webhook delivery gave up after retries (%s)", meta)
 
     async def _mark_broken(self, meta: dict) -> None:

@@ -79,10 +79,27 @@ document.querySelectorAll(".tab").forEach((btn) =>
   })
 );
 
+let currentTab = "overview";
+
 function loadTab(name) {
-  ({ overview: loadOverview, users: loadUsers, biomes: loadBiomes,
-     settings: loadSettings, events: loadEvents })[name]();
+  currentTab = name;
+  return ({ overview: loadOverview, users: loadUsers, biomes: loadBiomes,
+            settings: loadSettings, events: loadEvents })[name]();
 }
+
+// Live-update the read-only views. Tabs with editable fields (biomes, settings)
+// only refresh on demand so a poll can't wipe in-progress edits.
+const AUTO_REFRESH_TABS = new Set(["overview", "users", "events"]);
+const AUTO_REFRESH_MS = 10000;
+
+setInterval(() => {
+  if (document.hidden || !token || $("#app").classList.contains("hidden")) return;
+  if (!AUTO_REFRESH_TABS.has(currentTab)) return;
+  const focused = document.activeElement;
+  if (focused && focused.matches("input, select") &&
+      $("#tab-" + currentTab).contains(focused)) return;
+  loadTab(currentTab).catch(() => {});  // transient errors: retry next tick
+}, AUTO_REFRESH_MS);
 
 // ---------- overview ----------
 
@@ -90,7 +107,7 @@ async function loadOverview() {
   const s = await api("/stats");
   const cards = [
     [s.users_total, "users"], [s.users_active, "active"],
-    [s.events_24h, "events / 24h"], [s.dispatch_mode, "mode"],
+    [s.events_24h, "rare biomes / 24h"], [s.dispatch_mode, "mode"],
     [s.relay ? "relay" : "direct", "webhook flow"],
   ];
   $("#stats").innerHTML = cards
@@ -208,6 +225,7 @@ const SETTING_FIELDS = [
   ["dispatch_mode", "select", ["single_channel", "per_biome_channels", "per_user_channels"]],
   ["relay", "checkbox"],
   ["single_channel_webhook", "text"],
+  ["single_channel_webhooks", "list"],
   ["inactivity_enabled", "checkbox"],
   ["inactivity_days", "number"],
   ["min_macro_version", "text"],
@@ -223,6 +241,10 @@ async function loadSettings() {
         `<option ${o === s[key] ? "selected" : ""}>${o}</option>`).join("")}</select>`;
     } else if (kind === "checkbox") {
       input = `<input name="${key}" type="checkbox" ${s[key] ? "checked" : ""}>`;
+    } else if (kind === "list") {
+      input = `<textarea name="${key}" rows="3" spellcheck="false"
+        placeholder="extra webhooks for the same channel — one URL per line">${
+        esc((s[key] || []).join("\n"))}</textarea>`;
     } else {
       input = `<input name="${key}" type="${kind}" value="${esc(s[key] ?? "")}">`;
     }
@@ -238,6 +260,7 @@ $("#settings-form").addEventListener("submit", async (e) => {
     const el = form.elements[key];
     if (kind === "checkbox") body[key] = el.checked;
     else if (kind === "number") body[key] = parseInt(el.value) || undefined;
+    else if (kind === "list") body[key] = el.value.split(/[\n,]/).map((s) => s.trim()).filter(Boolean);
     else if (el.value !== "") body[key] = el.value;
   }
   try {

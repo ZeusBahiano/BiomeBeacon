@@ -58,6 +58,7 @@ class SettingsPatch(BaseModel):
     )
     relay: bool | None = None
     single_channel_webhook: str | None = None
+    single_channel_webhooks: list[str] | None = Field(default=None, max_length=20)
     admin_role_id: int | None = None
     key_manager_role_id: int | None = None
     inactivity_days: int | None = Field(default=None, ge=1, le=90)

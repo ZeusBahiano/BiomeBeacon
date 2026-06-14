@@ -39,8 +39,9 @@
       </div>
 
       <div class="side-footer">
-        UI inspired by <a href="https://github.com/xVapure/Noteab-Macro" class="ext-link"
-          target="_blank" rel="noopener">Coteab Macro</a><br>
+        UI design adapted (modified) from <a href="https://github.com/xVapure/Noteab-Macro"
+          class="ext-link" target="_blank" rel="noopener">Coteab Macro</a><br>
+        © 2025 Noteab · Apache-2.0<br>
         built partly with AI assistance
       </div>
     </aside>
@@ -82,6 +83,9 @@
       <section id="tab-settings" class="panel page hidden">
         <div class="card">
           <div class="card-title">Settings</div>
+          <p class="hint">For big single-channel communities, add extra webhooks pointing at the
+            <em>same</em> channel under <code>single channel webhooks</code> — Discord rate-limits
+            per webhook, so the server round-robins across them for more throughput.</p>
           <form id="settings-form"></form>
         </div>
         <div class="card">
@@ -97,6 +101,8 @@
       <section id="tab-events" class="panel page hidden">
         <div class="card">
           <div class="card-title">Events</div>
+          <p class="hint">Only rare (@everyone) biomes are logged here — common transitions are
+            dispatched but not stored, to keep writes low at scale.</p>
           <div class="row">
             <input id="ev-user" class="input" placeholder="discord id">
             <input id="ev-biome" class="input" placeholder="biome">

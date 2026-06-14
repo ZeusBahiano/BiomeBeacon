@@ -36,6 +36,11 @@ STOP = object()
 CONFIG_REFRESH_SECONDS = 600.0
 DEFAULT_HEARTBEAT_SECONDS = 300.0
 
+# aiohttp's *total* timeout raises asyncio.TimeoutError (== builtin TimeoutError
+# on 3.11+), which is NOT an aiohttp.ClientError. Catching only ClientError let a
+# single slow response kill the consumer task and silently stop all sending.
+NET_ERRORS = (aiohttp.ClientError, TimeoutError)
+
 
 class NetWorker(threading.Thread):
     def __init__(
@@ -129,9 +134,18 @@ class NetWorker(threading.Thread):
                     self._stopping.set()
                     return
                 batch.append(extra)
+            # Per-item guard: one bad event (or a network timeout in direct
+            # dispatch) must never break the loop — that is what used to stop
+            # the macro from sending after a while.
             for event in batch:
-                await self._handle_event(event)
-            await self._flush()
+                try:
+                    await self._handle_event(event)
+                except Exception:
+                    log.exception("event handling failed; continuing")
+            try:
+                await self._flush()
+            except Exception:
+                log.exception("flush failed; events stay buffered")
 
     async def _handle_event(self, event: BiomeEvent) -> None:
         record = {
@@ -191,7 +205,7 @@ class NetWorker(threading.Thread):
                         self._pending.popleft()
                 elif resp.status == 429:
                     pass  # keep buffered; next flush retries
-        except aiohttp.ClientError as exc:
+        except NET_ERRORS as exc:
             self._status(False, "Server unreachable — buffering events")
             log.warning("event flush failed: %s", exc)
 
@@ -203,8 +217,11 @@ class NetWorker(threading.Thread):
             if self.remote_config:
                 interval = float(self.remote_config.get("heartbeat_interval", interval))
             await asyncio.sleep(interval)
-            await self._flush()  # retry path for the offline buffer
-            await self._heartbeat()
+            try:
+                await self._flush()  # retry path for the offline buffer
+                await self._heartbeat()
+            except Exception:
+                log.exception("heartbeat loop iteration failed; continuing")
 
     async def _heartbeat(self) -> None:
         if not self._configured():
@@ -225,19 +242,25 @@ class NetWorker(threading.Thread):
                     )
                 elif resp.status == 401:
                     self._status(False, "Invalid or revoked API key")
-        except aiohttp.ClientError as exc:
+        except NET_ERRORS as exc:
             log.debug("heartbeat failed: %s", exc)
 
     async def _config_loop(self) -> None:
-        await self._fetch_config()
-        await self._heartbeat()
+        try:
+            await self._fetch_config()
+            await self._heartbeat()
+        except Exception:
+            log.exception("initial config/heartbeat failed; continuing")
         while True:
             try:
                 await asyncio.wait_for(self._refresh_now.wait(), timeout=CONFIG_REFRESH_SECONDS)
             except TimeoutError:
-                pass
+                pass  # expected: periodic refresh tick, not a network error
             self._refresh_now.clear()
-            await self._fetch_config()
+            try:
+                await self._fetch_config()
+            except Exception:
+                log.exception("config fetch failed; continuing")
 
     async def _fetch_config(self) -> None:
         if not self._configured():
@@ -258,7 +281,7 @@ class NetWorker(threading.Thread):
                     self._status(False, "Invalid or revoked API key")
                 else:
                     self._status(False, f"Server error HTTP {resp.status}")
-        except aiohttp.ClientError as exc:
+        except NET_ERRORS as exc:
             self._status(False, "Server unreachable")
             log.warning("config fetch failed: %s", exc)
 
@@ -278,7 +301,7 @@ class NetWorker(threading.Thread):
                 else:
                     data = await resp.json(content_type=None)
                     self._log(f"link rejected: {(data or {}).get('error', resp.status)}")
-        except aiohttp.ClientError:
+        except NET_ERRORS:
             self._log("could not update link (server unreachable)")
 
     async def _resolve_username(self, roblox_user_id: int) -> None:
@@ -292,5 +315,5 @@ class NetWorker(threading.Thread):
                     name = data.get("name") or str(roblox_user_id)
                     self._usernames[roblox_user_id] = name
                     self.ui_queue.put(("account", {"id": roblox_user_id, "name": name}))
-        except aiohttp.ClientError:
+        except NET_ERRORS:
             pass

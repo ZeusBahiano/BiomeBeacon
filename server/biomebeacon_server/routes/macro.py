@@ -87,6 +87,7 @@ async def post_events(request: web.Request) -> web.Response:
 
     accepted = dispatched = 0
     now = utcnow()
+    to_store: list[dict] = []
     for ev in payload.events:
         biome = found[ev.biome]
         doc = {
@@ -101,10 +102,18 @@ async def post_events(request: web.Request) -> web.Response:
             "dispatched": False,
         }
         if settings["relay"] and biome.get("notify", True):
-            doc["dispatched"] = await dispatcher.enqueue_event(doc, user, biome)
+            doc["dispatched"] = await dispatcher.enqueue_event(doc, user, biome, settings)
             dispatched += int(doc["dispatched"])
-        await db.events.insert_one(doc)
+        # Persist only the rare (@everyone) biomes. For a 1000-user community the
+        # flood of common transitions would dominate Mongo writes and storage for
+        # almost no value; the events collection is the rare-biome audit log.
+        # Mid-tier biomes are still dispatched above, just not stored.
+        if biome.get("ping_everyone"):
+            to_store.append(doc)
         accepted += 1
+
+    if to_store:
+        await db.events.insert_many(to_store, ordered=False)  # one round-trip
 
     update: dict = {"$set": {"last_event_at": now}}
     roblox_ids = [e.roblox_user_id for e in payload.events if e.roblox_user_id]

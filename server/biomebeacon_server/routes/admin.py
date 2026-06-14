@@ -151,8 +151,11 @@ async def patch_settings(request: web.Request) -> web.Response:
     if "single_channel_webhook" in updates:
         updates["single_channel_webhook_broken"] = False
     updates["updated_at"] = utcnow()
+    # Mongo rejects upserts where $set and $setOnInsert share a path (code 40),
+    # so only seed the defaults that this patch does not already touch.
+    on_insert = {k: v for k, v in DEFAULT_SETTINGS.items() if k not in updates}
     await db.settings.update_one(
-        {"_id": SETTINGS_ID}, {"$setOnInsert": DEFAULT_SETTINGS, "$set": updates}, upsert=True
+        {"_id": SETTINGS_ID}, {"$setOnInsert": on_insert, "$set": updates}, upsert=True
     )
     return web.json_response(jsonable({**merged, **updates}))
 

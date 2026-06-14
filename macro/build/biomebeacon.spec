@@ -8,13 +8,21 @@
 import os
 
 MACRO_DIR = os.path.abspath(os.path.join(SPECPATH, ".."))  # noqa: F821 (SPECPATH is injected)
+REPO_ROOT = os.path.abspath(os.path.join(MACRO_DIR, ".."))
 
 a = Analysis(  # noqa: F821
     [os.path.join(MACRO_DIR, "run_biomebeacon.py")],
     pathex=[MACRO_DIR],
     binaries=[],
-    # HTML/CSS/JS interface, served to the WebView2 window from the bundle
-    datas=[(os.path.join(MACRO_DIR, "biomebeacon", "webui"), "biomebeacon/webui")],
+    datas=[
+        # HTML/CSS/JS interface, served to the WebView2 window from the bundle
+        (os.path.join(MACRO_DIR, "biomebeacon", "webui"), "biomebeacon/webui"),
+        # License compliance (Apache-2.0 §4 — Noteab-Macro material): the same
+        # files are also staged next to the .exe by build.ps1 for distribution.
+        (os.path.join(REPO_ROOT, "LICENSE"), "."),
+        (os.path.join(REPO_ROOT, "THIRD_PARTY_NOTICES.md"), "."),
+        (os.path.join(REPO_ROOT, "LICENSES"), "LICENSES"),
+    ],
     hiddenimports=[],
     hookspath=[],
     runtime_hooks=[],

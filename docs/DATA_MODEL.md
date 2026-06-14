@@ -32,7 +32,8 @@ One document with `_id: "settings"`. Created with defaults on first run of eithe
 | `dispatch_mode` | str | `"single_channel"` | `single_channel` \| `per_biome_channels` \| `per_user_channels` |
 | `relay` | bool | `true` | true: macro posts events to the server, server dispatches webhooks. false: macro receives its webhook URL and posts directly (**only valid with `per_user_channels`**) |
 | `category_id` | int \| null | null | Discord category for auto-created user channels |
-| `single_channel_webhook` | str \| null | null | webhook URL for `single_channel` mode |
+| `single_channel_webhook` | str \| null | null | primary webhook URL for `single_channel` mode |
+| `single_channel_webhooks` | str[] | `[]` | extra webhooks for the **same** channel; dispatcher round-robins across all of them (Discord rate-limits per webhook, so this scales single-channel throughput for large communities) |
 | `single_channel_webhook_broken` | bool | `false` | set by dispatcher on 404/410 |
 | `admin_role_id` | int \| null | null | role allowed to manage everything |
 | `key_manager_role_id` | int \| null | null | role allowed to create/revoke keys |
@@ -90,9 +91,14 @@ Created by the bot (`/key create`). The server only updates `last_seen`, `last_e
 | `macro_version` | str \| null | reported via heartbeat |
 | `roblox_user_ids` | int[] | accounts seen in events (multi-instance) |
 
-## Collection: `events` (audit log)
+## Collection: `events` (rare-biome log)
 
-Written by the server only. TTL index on `server_ts` (30 days).
+Written by the server only. TTL index on `server_ts` (30 days). **Only events for
+biomes with `ping_everyone=true` are persisted** — for large (1000+ user)
+communities the flood of common transitions would dominate writes and storage for
+near-zero value. Mid-tier biomes are still dispatched as webhooks, just not stored,
+so this collection is effectively the rare-biome audit log (and the source of the
+"Lasted X min" duration, which is therefore only computed for `@everyone` biomes).
 
 | Field | Type |
 |---|---|
