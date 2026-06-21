@@ -11,7 +11,12 @@ from nextcord.ext import commands
 from ..db import get_settings, utcnow
 from ..keys import generate_key, valid_private_server_link
 from ..permissions import is_key_manager
-from ..provisioning import create_user_channel, delete_user_channel
+from ..provisioning import (
+    create_user_channel,
+    delete_user_channel,
+    grant_member_role,
+    revoke_member_role,
+)
 from ..util import discord_ts
 
 log = logging.getLogger(__name__)
@@ -87,11 +92,26 @@ class KeysCog(commands.Cog):
         webhook_url = existing.get("webhook_url") if existing else None
         notes = []
         if settings["dispatch_mode"] == "per_user_channels":
+            # Per-user mode grants access via a role — refuse to issue a key until one is set.
+            role_id = settings.get("member_role_id")
+            member_role = interaction.guild.get_role(role_id) if role_id else None
+            if member_role is None:
+                reason = (
+                    "the configured member role no longer exists"
+                    if role_id
+                    else "no member role is set"
+                )
+                await interaction.followup.send(
+                    f"Per-user channel mode requires a member role, but {reason} — "
+                    "configure it with `/setup roles member:` first."
+                )
+                return
+
             channel = interaction.guild.get_channel(channel_id) if channel_id else None
             if channel is None:
                 try:
                     channel_id, webhook_url = await create_user_channel(
-                        interaction.guild, member, settings.get("category_id")
+                        interaction.guild, member, settings.get("category_id"), member_role
                     )
                 except nextcord.Forbidden:
                     await interaction.followup.send(
@@ -100,6 +120,27 @@ class KeysCog(commands.Cog):
                     )
                     return
                 notes.append(f"Channel created: <#{channel_id}>")
+            else:
+                # Reused channel: keep the member role's read access in sync.
+                try:
+                    await channel.set_permissions(
+                        member_role,
+                        view_channel=True,
+                        read_message_history=True,
+                        reason="BiomeBeacon: verified members can view",
+                    )
+                except nextcord.Forbidden:
+                    pass
+
+            try:
+                await grant_member_role(member, member_role)
+            except nextcord.Forbidden:
+                await interaction.followup.send(
+                    f"I need **Manage Roles** (with my role above {member_role.mention}) "
+                    "to grant access."
+                )
+                return
+            notes.append(f"Granted {member_role.mention}.")
 
         key, key_hash, key_prefix = generate_key()
         fields = {
@@ -166,6 +207,12 @@ class KeysCog(commands.Cog):
             if await delete_user_channel(interaction.guild, user["channel_id"]):
                 notes.append("Channel deleted.")
             updates["channel_id"] = None
+        # Per-user mode: drop the access role too.
+        if settings["dispatch_mode"] == "per_user_channels":
+            role_id = settings.get("member_role_id")
+            member_role = interaction.guild.get_role(role_id) if role_id else None
+            if member_role is not None and await revoke_member_role(member, member_role):
+                notes.append(f"Removed {member_role.mention}.")
         await db.users.update_one({"discord_id": member.id}, {"$set": updates})
         await interaction.followup.send("\n".join(notes))
 

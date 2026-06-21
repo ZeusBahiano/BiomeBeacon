@@ -62,8 +62,11 @@ proxy or your PaaS's built-in TLS.
    - **Single channel**: everything into one channel (pass `channel:`).
    - **Per-biome channels**: map each biome with `/setup biomechannel biome: channel:`.
    - **Per-user channels**: pass `category:`; `/key create` then auto-creates a private
-     channel + webhook per user.
-2. `/setup roles key_manager: admin:` — who may create keys / administrate.
+     channel + webhook per user. This mode also **requires a member role** (step 2) —
+     it's granted on `/key create` and removed on `/key revoke`; keys can't be issued
+     without it.
+2. `/setup roles key_manager: admin: member:` — who may create keys / administrate, and
+   the access role handed to users on `/key create` (mandatory for per-user mode).
 3. `/setup inactivity enabled: true days: 3` — auto-remove users whose macro went
    quiet (deletes their channel, frees the Discord channel limit).
 4. `/admintoken create label: yourname` — token for the web dashboard at
@@ -84,6 +87,7 @@ proxy or your PaaS's built-in TLS.
 | Check a user's macro status | `/key info member:` |
 | Test a webhook | dashboard → Settings → *Send test webhook* |
 | Broken webhook (channel deleted) | dashboard Overview lists it; re-run `/setup mode` or `/setup biomechannel` |
+| Verified members can't see older channels | `/setup syncchannels` (backfills the member role's read access on channels made before it was set) |
 | Force macros to update | dashboard → Settings → `min_macro_version` (older macros get HTTP 409) |
 
 ## 5. Relay vs direct webhooks

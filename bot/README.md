@@ -9,7 +9,8 @@ the human-friendly admin surface: keys, channels, webhooks, inactivity.
 |---|---|---|
 | `/setup mode` | admin | single channel / per-biome / per-user dispatch (creates webhooks/categories) |
 | `/setup biomechannel` | admin | map a biome to a channel (per-biome mode) |
-| `/setup roles` | admin | set admin + key-manager roles |
+| `/setup roles` | admin | set admin + key-manager + member roles (member role is granted on key creation, required for per-user mode) |
+| `/setup syncchannels` | admin | backfill: give the member role read access to all existing per-user channels |
 | `/setup inactivity` | admin | auto-purge after N quiet days |
 | `/setup show` | admin | current configuration |
 | `/admintoken create` | Discord Administrator | dashboard token (shown once) |
@@ -27,9 +28,10 @@ python -m biomebeacon_bot
 ```
 
 Bot invite needs scopes `bot` + `applications.commands` and permissions
-**Manage Channels**, **Manage Webhooks**, **Send Messages**. No privileged
-intents. Slash commands are registered guild-scoped (`GUILD_ID`), so they appear
-instantly.
+**Manage Channels**, **Manage Webhooks**, **Send Messages**, and **Manage Roles**
+(to grant/remove the member access role in per-user mode — keep the bot's own role
+above the member role in the hierarchy). No privileged intents. Slash commands are
+registered guild-scoped (`GUILD_ID`), so they appear instantly.
 
 ## Notes
 

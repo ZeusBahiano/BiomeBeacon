@@ -37,6 +37,7 @@ One document with `_id: "settings"`. Created with defaults on first run of eithe
 | `single_channel_webhook_broken` | bool | `false` | set by dispatcher on 404/410 |
 | `admin_role_id` | int \| null | null | role allowed to manage everything |
 | `key_manager_role_id` | int \| null | null | role allowed to create/revoke keys |
+| `member_role_id` | int \| null | null | role granted to users on `/key create` (removed on `/key revoke`); also gets read access to **every** per-user channel, so verified members can view each other's feeds; **required in `per_user_channels` mode** |
 | `inactivity_days` | int | `3` | purge threshold based on `users.last_seen` |
 | `inactivity_enabled` | bool | `false` | daily purge task on/off |
 | `min_macro_version` | str | `"0.0.0"` | server rejects older macros (`409`) |

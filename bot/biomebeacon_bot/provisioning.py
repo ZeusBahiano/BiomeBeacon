@@ -20,9 +20,17 @@ def channel_name_for(member: nextcord.Member) -> str:
 
 
 async def create_user_channel(
-    guild: nextcord.Guild, member: nextcord.Member, category_id: int | None
+    guild: nextcord.Guild,
+    member: nextcord.Member,
+    category_id: int | None,
+    member_role: nextcord.Role | None = None,
 ) -> tuple[int, str]:
-    """Creates the user's private channel + webhook. Returns (channel_id, webhook_url)."""
+    """Creates the user's channel + webhook. Returns (channel_id, webhook_url).
+
+    Hidden from @everyone; the owner and the bot always see it. When member_role is
+    given, holders of that role get read access too, so verified members share each
+    other's feeds.
+    """
     category = guild.get_channel(category_id) if category_id else None
     if category is not None and not isinstance(category, nextcord.CategoryChannel):
         category = None
@@ -33,6 +41,10 @@ async def create_user_channel(
             view_channel=True, send_messages=True, manage_webhooks=True
         ),
     }
+    if member_role is not None:
+        overwrites[member_role] = nextcord.PermissionOverwrite(
+            view_channel=True, read_message_history=True
+        )
     channel = await guild.create_text_channel(
         name=channel_name_for(member),
         category=category,
@@ -65,3 +77,30 @@ async def create_channel_webhook(channel: nextcord.TextChannel) -> str:
             return webhook.url
     webhook = await channel.create_webhook(name=WEBHOOK_NAME)
     return webhook.url
+
+
+async def grant_member_role(member: nextcord.Member, role: nextcord.Role) -> None:
+    """Adds the access role to the member (no-op if they already have it).
+
+    Forbidden propagates so the caller can abort before issuing a key when the bot
+    lacks Manage Roles or sits below the role in the hierarchy.
+    """
+    if role in member.roles:
+        return
+    await member.add_roles(role, reason="BiomeBeacon: access granted")
+
+
+async def revoke_member_role(member: nextcord.Member, role: nextcord.Role) -> bool:
+    """Best-effort removal of the access role. Returns True if it was removed.
+
+    Never aborts the revoke: the key and channel are already gone, so a leftover role
+    is only cosmetic.
+    """
+    if role not in member.roles:
+        return False
+    try:
+        await member.remove_roles(role, reason="BiomeBeacon: access revoked")
+        return True
+    except nextcord.HTTPException as exc:
+        log.warning("could not remove role %s from %s: %s", role.id, member.id, exc)
+        return False

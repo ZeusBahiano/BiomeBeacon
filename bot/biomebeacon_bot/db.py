@@ -22,6 +22,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "single_channel_webhook_broken": False,
     "admin_role_id": None,
     "key_manager_role_id": None,
+    "member_role_id": None,  # granted on /key create; required in per_user_channels mode
     "inactivity_days": 3,
     "inactivity_enabled": False,
     "min_macro_version": "0.0.0",

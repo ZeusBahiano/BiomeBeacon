@@ -86,6 +86,11 @@ class SetupCog(commands.Cog):
                 await interaction.followup.send("Pass `category:` for per-user mode.")
                 return
             updates["category_id"] = category.id
+            if not settings.get("member_role_id"):
+                notes.append(
+                    "⚠️ Set a member role with `/setup roles member:` — per-user mode "
+                    "won't issue keys without it."
+                )
             notes.append(
                 f"`/key create` will now auto-create channels under **{category.name}**."
             )
@@ -104,7 +109,7 @@ class SetupCog(commands.Cog):
             f"Dispatch mode set to **{mode}**.\n" + "\n".join(notes)
         )
 
-    @setup_group.subcommand(name="roles", description="Set admin and key-manager roles")
+    @setup_group.subcommand(name="roles", description="Set admin, key-manager and member roles")
     async def setup_roles(
         self,
         interaction: nextcord.Interaction,
@@ -114,6 +119,10 @@ class SetupCog(commands.Cog):
         admin: nextcord.Role = SlashOption(
             description="Role with full BiomeBeacon admin", required=False
         ),
+        member: nextcord.Role = SlashOption(
+            description="Role granted on /key create (required for per-user mode)",
+            required=False,
+        ),
     ):
         if await self._gate_admin(interaction) is None:
             return
@@ -122,13 +131,58 @@ class SetupCog(commands.Cog):
             updates["key_manager_role_id"] = key_manager.id
         if admin is not None:
             updates["admin_role_id"] = admin.id
+        if member is not None:
+            updates["member_role_id"] = member.id
         if not updates:
             await interaction.response.send_message(
-                "Pass `key_manager:` and/or `admin:`.", ephemeral=True
+                "Pass `key_manager:`, `admin:` and/or `member:`.", ephemeral=True
             )
             return
         await update_settings(self.bot.db, updates)
         await interaction.response.send_message("Roles updated.", ephemeral=True)
+
+    @setup_group.subcommand(
+        name="syncchannels",
+        description="Give the member role read access to all existing per-user channels",
+    )
+    async def setup_syncchannels(self, interaction: nextcord.Interaction):
+        settings = await self._gate_admin(interaction)
+        if settings is None:
+            return
+        role_id = settings.get("member_role_id")
+        role = interaction.guild.get_role(role_id) if role_id else None
+        if role is None:
+            await interaction.response.send_message(
+                "Set a member role first with `/setup roles member:`.", ephemeral=True
+            )
+            return
+        await interaction.response.defer(ephemeral=True)
+        # Backfill channels created before the member role was configured.
+        updated = missing = failed = 0
+        cursor = self.bot.db.users.find(
+            {"channel_id": {"$ne": None}}, {"channel_id": 1}
+        )
+        async for user in cursor:
+            channel = interaction.guild.get_channel(user["channel_id"])
+            if channel is None:
+                missing += 1
+                continue
+            try:
+                await channel.set_permissions(
+                    role,
+                    view_channel=True,
+                    read_message_history=True,
+                    reason="BiomeBeacon: sync verified-member view access",
+                )
+                updated += 1
+            except nextcord.HTTPException:
+                failed += 1
+        msg = f"Synced **{updated}** channel(s) — {role.mention} can now read them."
+        if missing:
+            msg += f"\n{missing} record(s) had no live channel (skipped)."
+        if failed:
+            msg += f"\n⚠️ {failed} failed — check my **Manage Channels** permission."
+        await interaction.followup.send(msg)
 
     @setup_group.subcommand(
         name="inactivity", description="Auto-remove users whose macro went quiet"
@@ -235,11 +289,13 @@ class SetupCog(commands.Cog):
         )
         admin_role = settings.get("admin_role_id")
         manager_role = settings.get("key_manager_role_id")
+        member_role = settings.get("member_role_id")
         embed.add_field(
             name="Roles",
             value=(
                 f"admin: {f'<@&{admin_role}>' if admin_role else '—'}\n"
-                f"key manager: {f'<@&{manager_role}>' if manager_role else '—'}"
+                f"key manager: {f'<@&{manager_role}>' if manager_role else '—'}\n"
+                f"member: {f'<@&{member_role}>' if member_role else '—'}"
             ),
             inline=False,
         )

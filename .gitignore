@@ -8,6 +8,7 @@ __pycache__/
 
 # IDE
 .idea/
+/.claude/
 
 # Secrets / local config
 .env
@@ -16,6 +17,8 @@ __pycache__/
 macro/build/work/
 macro/build/dist/
 
+
 # OS
 Thumbs.db
 desktop.ini
+
