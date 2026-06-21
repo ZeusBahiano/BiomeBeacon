@@ -1,7 +1,7 @@
 # BiomeBeacon
 
 Biome detection and alerting ecosystem for **Sol's RNG** (Roblox) biome-hunting
-communities. When a rare biome (Glitched, Dreamspace, …) starts in a user's private
+communities. When a rare biome (Glitched, Dreamspace, ...) starts in a user's private
 server, everyone in the community's Discord gets pinged with the link to join.
 
 ## How it works
@@ -21,27 +21,32 @@ database — see [docs/DATA_MODEL.md](docs/DATA_MODEL.md)).
 
 ## Components
 
-| Component | What it is | Who runs it |
-|---|---|---|
-| [`macro/`](macro/) | Open-source Windows app (HTML UI in a native WebView2 window via pywebview, styled after the game's menus). Tails Roblox logs, detects biome changes, sends events. Distributed as a PyInstaller `.exe`. | Each user |
-| [`server/`](server/) | aiohttp REST API + admin dashboard + webhook dispatcher (MongoDB). | The community |
-| [`bot/`](bot/) | nextcord Discord bot: creates keys, auto-provisions channels/webhooks, purges inactive users. | The community |
+Each component has its own README with setup and usage details — start there:
+
+| Component | README | What it is | Who runs it |
+|---|---|---|---|
+| Macro | [macro/README.md](macro/README.md) | Open-source Windows app (HTML UI in a native WebView2 window via pywebview, styled after the game's menus). Tails Roblox logs, detects biome changes, sends events. Distributed as a PyInstaller `.exe`. | Each user |
+| Server | [server/README.md](server/README.md) | aiohttp REST API + admin dashboard + webhook dispatcher (MongoDB). | The community |
+| Bot | [bot/README.md](bot/README.md) | nextcord Discord bot: creates keys, auto-provisions channels/webhooks, purges inactive users. | The community |
 
 ## Documentation
 
-- [docs/DATA_MODEL.md](docs/DATA_MODEL.md) — MongoDB collections (server ↔ bot contract)
+- [docs/SELF_HOSTING.md](docs/SELF_HOSTING.md) — hosting guide for communities (start here to run your own)
 - [docs/API.md](docs/API.md) — REST API contract (macro ↔ server, admin ↔ server)
-- [docs/SELF_HOSTING.md](docs/SELF_HOSTING.md) — hosting guide for communities
+- [docs/DATA_MODEL.md](docs/DATA_MODEL.md) — MongoDB collections (server ↔ bot contract)
 
 ## Development
 
-Single venv at the repo root works for all components:
+A single venv at the repo root works for all components:
 
 ```powershell
 python -m venv .venv
 .venv\Scripts\python -m pip install -r macro/requirements.txt -r server/requirements.txt -r bot/requirements.txt -r requirements-dev.txt
 .venv\Scripts\python -m pytest macro server bot
 ```
+
+Per-component dev instructions (running from source, building the `.exe`, faking Roblox
+logs/webhooks for tests) live in each component's README linked above.
 
 ## Credits
 
@@ -58,3 +63,5 @@ python -m venv .venv
 
 License: [MIT](LICENSE), with third-party components under their own terms —
 see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+</content>
+</invoke>
