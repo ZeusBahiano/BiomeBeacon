@@ -68,7 +68,7 @@ async def test_full_pipeline(tmp_path, sink):
         await db.users.insert_one(
             {
                 "discord_id": 111,
-                "discord_name": "lucas",
+                "discord_name": "luh",
                 "key_hash": hash_key(TEST_KEY),
                 "key_prefix": TEST_KEY[:8],
                 "private_server_link": "https://www.roblox.com/share?code=e2e1&type=Server",
