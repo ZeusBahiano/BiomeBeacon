@@ -42,6 +42,7 @@ python -m venv .venv
 .venv\Scripts\python -m pip install -r macro/requirements.txt -r server/requirements.txt -r bot/requirements.txt -r requirements-dev.txt
 .venv\Scripts\python -m pytest macro server bot
 ```
+Any questions or issues dm me on discord or make a PR or open an issue (@zeusbahiano)
 
 ## Credits
 
